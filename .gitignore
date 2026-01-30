@@ -1,0 +1,18 @@
+# .NET Core
+bin/
+obj/
+*.user
+*.suo
+.vscode/
+.vs/
+appsettings.Development.json
+
+# Node.js
+node_modules/
+dist/
+build/
+.env
+.DS_Store
+
+# Logs
+*.log

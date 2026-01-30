@@ -1,0 +1,6 @@
+@DurianQR.API_HostAddress = http://localhost:5162
+
+GET {{DurianQR.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

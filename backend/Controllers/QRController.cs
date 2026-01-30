@@ -46,15 +46,15 @@ public class QRController : ControllerBase
         return qrCode;
     }
 
-    // POST: api/qr/generate/{batchId} - Generate QR for a batch
+    // POST: api/qr/generate/{batchId} - Generate QR for a ProductBatch
     [HttpPost("generate/{batchId}")]
     public async Task<ActionResult<BatchQRCode>> GenerateQR(int batchId)
     {
-        var batch = await _context.HarvestBatches
-            .Include(b => b.Tree)
-                .ThenInclude(t => t!.Farm)
-                    .ThenInclude(f => f!.User)
-            .Include(b => b.FarmingLogs)
+        var batch = await _context.ProductBatches
+            .Include(b => b.HarvestRequests)
+                .ThenInclude(hr => hr.HarvestRequest)
+                    .ThenInclude(r => r!.Tree)
+                        .ThenInclude(t => t!.Farm)
             .FirstOrDefaultAsync(b => b.BatchID == batchId);
 
         if (batch == null)
@@ -65,28 +65,21 @@ public class QRController : ControllerBase
         // Check if batch is safe
         if (!batch.IsSafe)
         {
-            return BadRequest(new { message = "Cannot generate QR - batch is not safe for harvest" });
+            return BadRequest(new { message = "Cannot generate QR - batch is not safe for export" });
         }
 
-        // Check if any farming log has SafeAfterDate in the future
-        var unsafeLogs = batch.FarmingLogs
-            .Where(l => l.SafeAfterDate.HasValue && l.SafeAfterDate.Value > DateTime.UtcNow)
-            .ToList();
-
-        if (unsafeLogs.Any())
+        // Check if already has QR
+        var existingQR = await _context.QRCodes.FirstOrDefaultAsync(q => q.BatchID == batchId);
+        if (existingQR != null)
         {
-            return BadRequest(new 
-            { 
-                message = "Cannot generate QR - safety period not met",
-                safeAfterDate = unsafeLogs.Max(l => l.SafeAfterDate)
-            });
+            return BadRequest(new { message = "Lô này đã có QR code", qrCode = existingQR });
         }
 
         // Create QR data with traceability info
         var qrData = new
         {
             batchCode = batch.BatchCode,
-            url = $"https://trannhuy.online/trace/{batch.BatchCode}",
+            url = $"https://durianqr.trannhuy.online/trace/{batch.BatchCode}",
             generatedAt = DateTime.UtcNow
         };
 
@@ -118,7 +111,7 @@ public class QRController : ControllerBase
         _context.QRCodes.Add(qrCode);
         
         // Update batch status
-        batch.Status = "Exported";
+        batch.ExportStatus = "Shipped";
         
         await _context.SaveChangesAsync();
 
@@ -130,7 +123,7 @@ public class QRController : ControllerBase
         });
     }
 
-    // GET: api/qr/image/{batchCode} - Get QR image by batch code
+    // GET: api/qr/image/{batchCode}
     [HttpGet("image/{batchCode}")]
     public async Task<IActionResult> GetQRImage(string batchCode)
     {
@@ -153,7 +146,7 @@ public class QRController : ControllerBase
         return File(imageBytes, "image/png");
     }
 
-    // POST: api/qr/scan/{batchCode} - Record a scan
+    // POST: api/qr/scan/{batchCode}
     [HttpPost("scan/{batchCode}")]
     public async Task<IActionResult> RecordScan(string batchCode)
     {

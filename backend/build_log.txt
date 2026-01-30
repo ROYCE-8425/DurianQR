@@ -1,0 +1,15 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+D:\web\DurianQR\backend\Controllers\TreesController.cs(25,29): error CS1061: 'DurianTree' does not contain a definition for 'Batches' and no accessible extension method 'Batches' accepting a first argument of type 'DurianTree' could be found (are you missing a using directive or an assembly reference?) [D:\web\DurianQR\backend\DurianQR.API.csproj]
+D:\web\DurianQR\backend\Controllers\TreesController.cs(35,29): error CS1061: 'DurianTree' does not contain a definition for 'Batches' and no accessible extension method 'Batches' accepting a first argument of type 'DurianTree' could be found (are you missing a using directive or an assembly reference?) [D:\web\DurianQR\backend\DurianQR.API.csproj]
+D:\web\DurianQR\backend\Controllers\TreesController.cs(52,29): error CS1061: 'DurianTree' does not contain a definition for 'Batches' and no accessible extension method 'Batches' accepting a first argument of type 'DurianTree' could be found (are you missing a using directive or an assembly reference?) [D:\web\DurianQR\backend\DurianQR.API.csproj]
+
+Build FAILED.
+
+D:\web\DurianQR\backend\Controllers\TreesController.cs(25,29): error CS1061: 'DurianTree' does not contain a definition for 'Batches' and no accessible extension method 'Batches' accepting a first argument of type 'DurianTree' could be found (are you missing a using directive or an assembly reference?) [D:\web\DurianQR\backend\DurianQR.API.csproj]
+D:\web\DurianQR\backend\Controllers\TreesController.cs(35,29): error CS1061: 'DurianTree' does not contain a definition for 'Batches' and no accessible extension method 'Batches' accepting a first argument of type 'DurianTree' could be found (are you missing a using directive or an assembly reference?) [D:\web\DurianQR\backend\DurianQR.API.csproj]
+D:\web\DurianQR\backend\Controllers\TreesController.cs(52,29): error CS1061: 'DurianTree' does not contain a definition for 'Batches' and no accessible extension method 'Batches' accepting a first argument of type 'DurianTree' could be found (are you missing a using directive or an assembly reference?) [D:\web\DurianQR\backend\DurianQR.API.csproj]
+    0 Warning(s)
+    3 Error(s)
+
+Time Elapsed 00:00:01.15

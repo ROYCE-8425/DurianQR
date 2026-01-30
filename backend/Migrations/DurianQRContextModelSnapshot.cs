@@ -22,6 +22,36 @@ namespace DurianQR.API.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("DurianQR.API.Models.BatchHarvestRequest", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("BatchID")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ContributedWeight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("RequestID")
+                        .HasColumnType("int");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("RequestID");
+
+                    b.HasIndex("BatchID", "RequestID")
+                        .IsUnique();
+
+                    b.ToTable("BatchHarvestRequests");
+                });
+
             modelBuilder.Entity("DurianQR.API.Models.BatchQRCode", b =>
                 {
                     b.Property<int>("QRID")
@@ -100,7 +130,7 @@ namespace DurianQR.API.Migrations
                             ChemicalID = 1,
                             ActiveIngredient = "Abamectin 1.8%",
                             ChemicalName = "Abamectin",
-                            CreatedAt = new DateTime(2026, 1, 30, 16, 40, 25, 4, DateTimeKind.Utc).AddTicks(9553),
+                            CreatedAt = new DateTime(2026, 1, 30, 19, 37, 12, 586, DateTimeKind.Utc).AddTicks(1011),
                             IsBanned = false,
                             PHI_Days = 14,
                             TargetMarket = "VN,CN"
@@ -110,7 +140,7 @@ namespace DurianQR.API.Migrations
                             ChemicalID = 2,
                             ActiveIngredient = "Chlorpyrifos 48%",
                             ChemicalName = "Chlorpyrifos",
-                            CreatedAt = new DateTime(2026, 1, 30, 16, 40, 25, 5, DateTimeKind.Utc).AddTicks(450),
+                            CreatedAt = new DateTime(2026, 1, 30, 19, 37, 12, 586, DateTimeKind.Utc).AddTicks(2037),
                             IsBanned = true,
                             PHI_Days = 21,
                             TargetMarket = "EU"
@@ -120,7 +150,7 @@ namespace DurianQR.API.Migrations
                             ChemicalID = 3,
                             ActiveIngredient = "Imidacloprid 10%",
                             ChemicalName = "Imidacloprid",
-                            CreatedAt = new DateTime(2026, 1, 30, 16, 40, 25, 5, DateTimeKind.Utc).AddTicks(452),
+                            CreatedAt = new DateTime(2026, 1, 30, 19, 37, 12, 586, DateTimeKind.Utc).AddTicks(2040),
                             IsBanned = false,
                             PHI_Days = 14,
                             TargetMarket = "VN,CN"
@@ -130,7 +160,7 @@ namespace DurianQR.API.Migrations
                             ChemicalID = 4,
                             ActiveIngredient = "Mancozeb 80%",
                             ChemicalName = "Mancozeb",
-                            CreatedAt = new DateTime(2026, 1, 30, 16, 40, 25, 5, DateTimeKind.Utc).AddTicks(453),
+                            CreatedAt = new DateTime(2026, 1, 30, 19, 37, 12, 586, DateTimeKind.Utc).AddTicks(2041),
                             IsBanned = false,
                             PHI_Days = 7,
                             TargetMarket = "VN"
@@ -140,7 +170,7 @@ namespace DurianQR.API.Migrations
                             ChemicalID = 5,
                             ActiveIngredient = "Thiamethoxam 25%",
                             ChemicalName = "Thiamethoxam",
-                            CreatedAt = new DateTime(2026, 1, 30, 16, 40, 25, 5, DateTimeKind.Utc).AddTicks(455),
+                            CreatedAt = new DateTime(2026, 1, 30, 19, 37, 12, 586, DateTimeKind.Utc).AddTicks(2043),
                             IsBanned = true,
                             PHI_Days = 14,
                             TargetMarket = "EU"
@@ -237,7 +267,7 @@ namespace DurianQR.API.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
-                    b.Property<int>("BatchID")
+                    b.Property<int?>("ChemicalID")
                         .HasColumnType("int");
 
                     b.Property<string>("ChemicalUsed")
@@ -270,53 +300,88 @@ namespace DurianQR.API.Migrations
                     b.Property<int?>("SafetyDays")
                         .HasColumnType("int");
 
+                    b.Property<int>("TreeID")
+                        .HasColumnType("int");
+
                     b.Property<string>("Unit")
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 
                     b.HasKey("LogID");
 
-                    b.HasIndex("BatchID");
+                    b.HasIndex("ActivityType");
+
+                    b.HasIndex("ChemicalID");
 
                     b.HasIndex("LogDate");
+
+                    b.HasIndex("TreeID");
 
                     b.ToTable("FarmingLogs");
                 });
 
-            modelBuilder.Entity("DurianQR.API.Models.HarvestBatch", b =>
+            modelBuilder.Entity("DurianQR.API.Models.HarvestRequest", b =>
                 {
-                    b.Property<int>("BatchID")
+                    b.Property<int>("RequestID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("BatchID"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("RequestID"));
 
-                    b.Property<DateTime?>("ActualHarvest")
+                    b.Property<decimal?>("ActualQuantity")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("ApprovalNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("BatchCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                    b.Property<int?>("ApprovedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CheckedInAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CheckedInBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime?>("ExpectedHarvest")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("FloweringDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsSafe")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("QualityGrade")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<decimal?>("Quantity")
+                    b.Property<decimal>("EstimatedQuantity")
                         .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTime>("ExpectedHarvestDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal?>("GradeA_Quantity")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("GradeB_Quantity")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("GradeC_Quantity")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("PHICheckResult")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("RequestCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("RequestDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("SafeAfterDate")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -326,14 +391,97 @@ namespace DurianQR.API.Migrations
                     b.Property<int>("TreeID")
                         .HasColumnType("int");
 
+                    b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.HasKey("RequestID");
+
+                    b.HasIndex("ExpectedHarvestDate");
+
+                    b.HasIndex("RequestCode")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TreeID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("HarvestRequests");
+                });
+
+            modelBuilder.Entity("DurianQR.API.Models.ProductBatch", b =>
+                {
+                    b.Property<int>("BatchID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("BatchID"));
+
+                    b.Property<string>("BatchCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("BatchType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExportStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<decimal?>("GradeA_Weight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("GradeB_Weight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("GradeC_Weight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<bool>("IsSafe")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime?>("PackingDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("QualityGrade")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("TargetMarket")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<decimal?>("TotalWeight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int?>("WarehouseID")
+                        .HasColumnType("int");
+
                     b.HasKey("BatchID");
 
                     b.HasIndex("BatchCode")
                         .IsUnique();
 
-                    b.HasIndex("TreeID");
+                    b.HasIndex("ExportStatus");
 
-                    b.ToTable("HarvestBatches");
+                    b.HasIndex("WarehouseID");
+
+                    b.ToTable("ProductBatches");
                 });
 
             modelBuilder.Entity("DurianQR.API.Models.User", b =>
@@ -379,15 +527,89 @@ namespace DurianQR.API.Migrations
 
                     b.HasIndex("Email");
 
+                    b.HasIndex("Role");
+
                     b.HasIndex("Username")
                         .IsUnique();
 
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("DurianQR.API.Models.Warehouse", b =>
+                {
+                    b.Property<int>("WarehouseID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("WarehouseID"));
+
+                    b.Property<string>("Coordinates")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int?>("ManagerID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WarehouseName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("WarehouseID");
+
+                    b.HasIndex("ManagerID")
+                        .IsUnique();
+
+                    b.HasIndex("WarehouseName");
+
+                    b.ToTable("Warehouses");
+
+                    b.HasData(
+                        new
+                        {
+                            WarehouseID = 1,
+                            CreatedAt = new DateTime(2026, 1, 30, 19, 37, 12, 586, DateTimeKind.Utc).AddTicks(6870),
+                            Location = "Huyện Krông Pắk, Đắk Lắk",
+                            WarehouseName = "HTX Krông Pắk"
+                        },
+                        new
+                        {
+                            WarehouseID = 2,
+                            CreatedAt = new DateTime(2026, 1, 30, 19, 37, 12, 586, DateTimeKind.Utc).AddTicks(7750),
+                            Location = "Huyện Cư M'gar, Đắk Lắk",
+                            WarehouseName = "HTX Cư M'gar"
+                        });
+                });
+
+            modelBuilder.Entity("DurianQR.API.Models.BatchHarvestRequest", b =>
+                {
+                    b.HasOne("DurianQR.API.Models.ProductBatch", "Batch")
+                        .WithMany("HarvestRequests")
+                        .HasForeignKey("BatchID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DurianQR.API.Models.HarvestRequest", "HarvestRequest")
+                        .WithMany("BatchRequests")
+                        .HasForeignKey("RequestID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("HarvestRequest");
+                });
+
             modelBuilder.Entity("DurianQR.API.Models.BatchQRCode", b =>
                 {
-                    b.HasOne("DurianQR.API.Models.HarvestBatch", "Batch")
+                    b.HasOne("DurianQR.API.Models.ProductBatch", "Batch")
                         .WithMany("QRCodes")
                         .HasForeignKey("BatchID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -420,29 +642,71 @@ namespace DurianQR.API.Migrations
 
             modelBuilder.Entity("DurianQR.API.Models.FarmingLog", b =>
                 {
-                    b.HasOne("DurianQR.API.Models.HarvestBatch", "Batch")
+                    b.HasOne("DurianQR.API.Models.Chemical", "Chemical")
                         .WithMany("FarmingLogs")
-                        .HasForeignKey("BatchID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ChemicalID")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Batch");
-                });
-
-            modelBuilder.Entity("DurianQR.API.Models.HarvestBatch", b =>
-                {
                     b.HasOne("DurianQR.API.Models.DurianTree", "Tree")
-                        .WithMany("Batches")
+                        .WithMany("FarmingLogs")
                         .HasForeignKey("TreeID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Chemical");
+
                     b.Navigation("Tree");
+                });
+
+            modelBuilder.Entity("DurianQR.API.Models.HarvestRequest", b =>
+                {
+                    b.HasOne("DurianQR.API.Models.DurianTree", "Tree")
+                        .WithMany("HarvestRequests")
+                        .HasForeignKey("TreeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DurianQR.API.Models.User", "Farmer")
+                        .WithMany("HarvestRequests")
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Farmer");
+
+                    b.Navigation("Tree");
+                });
+
+            modelBuilder.Entity("DurianQR.API.Models.ProductBatch", b =>
+                {
+                    b.HasOne("DurianQR.API.Models.Warehouse", "Warehouse")
+                        .WithMany("ProductBatches")
+                        .HasForeignKey("WarehouseID")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("DurianQR.API.Models.Warehouse", b =>
+                {
+                    b.HasOne("DurianQR.API.Models.User", "Manager")
+                        .WithOne("ManagedWarehouse")
+                        .HasForeignKey("DurianQR.API.Models.Warehouse", "ManagerID")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Manager");
+                });
+
+            modelBuilder.Entity("DurianQR.API.Models.Chemical", b =>
+                {
+                    b.Navigation("FarmingLogs");
                 });
 
             modelBuilder.Entity("DurianQR.API.Models.DurianTree", b =>
                 {
-                    b.Navigation("Batches");
+                    b.Navigation("FarmingLogs");
+
+                    b.Navigation("HarvestRequests");
                 });
 
             modelBuilder.Entity("DurianQR.API.Models.Farm", b =>
@@ -450,9 +714,14 @@ namespace DurianQR.API.Migrations
                     b.Navigation("Trees");
                 });
 
-            modelBuilder.Entity("DurianQR.API.Models.HarvestBatch", b =>
+            modelBuilder.Entity("DurianQR.API.Models.HarvestRequest", b =>
                 {
-                    b.Navigation("FarmingLogs");
+                    b.Navigation("BatchRequests");
+                });
+
+            modelBuilder.Entity("DurianQR.API.Models.ProductBatch", b =>
+                {
+                    b.Navigation("HarvestRequests");
 
                     b.Navigation("QRCodes");
                 });
@@ -460,6 +729,15 @@ namespace DurianQR.API.Migrations
             modelBuilder.Entity("DurianQR.API.Models.User", b =>
                 {
                     b.Navigation("Farms");
+
+                    b.Navigation("HarvestRequests");
+
+                    b.Navigation("ManagedWarehouse");
+                });
+
+            modelBuilder.Entity("DurianQR.API.Models.Warehouse", b =>
+                {
+                    b.Navigation("ProductBatches");
                 });
 #pragma warning restore 612, 618
         }

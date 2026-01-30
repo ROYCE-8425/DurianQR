@@ -19,11 +19,20 @@ public class TraceController : ControllerBase
     [HttpGet("{batchCode}")]
     public async Task<IActionResult> GetTraceability(string batchCode)
     {
-        var batch = await _context.HarvestBatches
-            .Include(b => b.Tree)
-                .ThenInclude(t => t!.Farm)
-                    .ThenInclude(f => f!.User)
-            .Include(b => b.FarmingLogs.OrderBy(l => l.LogDate))
+        var batch = await _context.ProductBatches
+            .Include(b => b.Warehouse)
+            .Include(b => b.HarvestRequests)
+                .ThenInclude(hr => hr.HarvestRequest)
+                    .ThenInclude(r => r!.Farmer)
+            .Include(b => b.HarvestRequests)
+                .ThenInclude(hr => hr.HarvestRequest)
+                    .ThenInclude(r => r!.Tree)
+                        .ThenInclude(t => t!.Farm)
+                            .ThenInclude(f => f!.User)
+            .Include(b => b.HarvestRequests)
+                .ThenInclude(hr => hr.HarvestRequest)
+                    .ThenInclude(r => r!.Tree)
+                        .ThenInclude(t => t!.FarmingLogs.OrderByDescending(l => l.LogDate))
             .Include(b => b.QRCodes)
             .FirstOrDefaultAsync(b => b.BatchCode == batchCode);
 
@@ -40,48 +49,55 @@ public class TraceController : ControllerBase
             await _context.SaveChangesAsync();
         }
 
-        // Build traceability response
-        var response = new
-        {
-            // Thông tin lô hàng
-            batch = new
-            {
-                batchCode = batch.BatchCode,
-                status = batch.Status,
-                isSafe = batch.IsSafe,
-                safetyLabel = batch.IsSafe ? "✅ ĐẠT AN TOÀN VSTP" : "⚠️ CHƯA ĐẠT AN TOÀN",
-                floweringDate = batch.FloweringDate,
-                harvestDate = batch.ActualHarvest,
-                quantity = batch.Quantity,
-                qualityGrade = batch.QualityGrade
-            },
+        // Get all farmers contributing to this batch
+        var harvestRequests = batch.HarvestRequests
+            .Select(hr => hr.HarvestRequest)
+            .Where(r => r != null)
+            .ToList();
 
-            // Thông tin cây
-            tree = batch.Tree != null ? new
+        var farmers = harvestRequests
+            .Select(r => r!.Farmer)
+            .Where(f => f != null)
+            .DistinctBy(f => f!.UserID)
+            .Select(f => new
             {
-                treeCode = batch.Tree.TreeCode,
-                variety = batch.Tree.Variety,
-                plantingYear = batch.Tree.PlantingYear
-            } : null,
+                fullName = f!.FullName,
+                phone = f.Phone
+            })
+            .ToList();
 
-            // Thông tin nông trại
-            farm = batch.Tree?.Farm != null ? new
+        var farms = harvestRequests
+            .Select(r => r!.Tree?.Farm)
+            .Where(f => f != null)
+            .DistinctBy(f => f!.FarmID)
+            .Select(f => new
             {
-                farmName = batch.Tree.Farm.FarmName,
-                location = batch.Tree.Farm.Location,
-                area = batch.Tree.Farm.Area,
-                coordinates = batch.Tree.Farm.Coordinates
-            } : null,
+                farmName = f!.FarmName,
+                location = f.Location,
+                area = f.Area,
+                coordinates = f.Coordinates
+            })
+            .ToList();
 
-            // Thông tin nông dân
-            farmer = batch.Tree?.Farm?.User != null ? new
+        var trees = harvestRequests
+            .Select(r => r!.Tree)
+            .Where(t => t != null)
+            .DistinctBy(t => t!.TreeID)
+            .Select(t => new
             {
-                fullName = batch.Tree.Farm.User.FullName,
-                phone = batch.Tree.Farm.User.Phone
-            } : null,
+                treeCode = t!.TreeCode,
+                variety = t.Variety,
+                plantingYear = t.PlantingYear
+            })
+            .ToList();
 
-            // Nhật ký nông vụ (timeline)
-            farmingHistory = batch.FarmingLogs.Select(log => new
+        // Get all farming logs from all trees
+        var farmingLogs = harvestRequests
+            .Where(r => r?.Tree?.FarmingLogs != null)
+            .SelectMany(r => r!.Tree!.FarmingLogs)
+            .OrderByDescending(l => l.LogDate)
+            .Take(20) // Limit to last 20 activities
+            .Select(log => new
             {
                 date = log.LogDate,
                 activity = log.ActivityType,
@@ -91,7 +107,50 @@ public class TraceController : ControllerBase
                 safetyDays = log.SafetyDays,
                 safeAfterDate = log.SafeAfterDate,
                 verified = log.IsAutoValidated
-            }),
+            })
+            .ToList();
+
+        // Build traceability response
+        var response = new
+        {
+            // Thông tin lô hàng
+            batch = new
+            {
+                batchCode = batch.BatchCode,
+                batchType = batch.BatchType,
+                status = batch.ExportStatus,
+                isSafe = batch.IsSafe,
+                safetyLabel = batch.IsSafe ? "✅ ĐẠT AN TOÀN VSTP" : "⚠️ CHƯA ĐẠT AN TOÀN",
+                packingDate = batch.PackingDate,
+                totalWeight = batch.TotalWeight,
+                gradeA = batch.GradeA_Weight,
+                gradeB = batch.GradeB_Weight,
+                gradeC = batch.GradeC_Weight,
+                qualityGrade = batch.QualityGrade,
+                targetMarket = batch.TargetMarket,
+                warehouse = batch.Warehouse?.WarehouseName 
+            },
+
+            // Số lượng nguồn
+            sources = new
+            {
+                farmersCount = farmers.Count,
+                farmsCount = farms.Count,
+                treesCount = trees.Count,
+                requestsCount = harvestRequests.Count
+            },
+
+            // Thông tin cây (tất cả các cây đóng góp)
+            trees = trees,
+
+            // Thông tin nông trại
+            farms = farms,
+
+            // Thông tin nông dân
+            farmers = farmers,
+
+            // Nhật ký nông vụ (timeline)
+            farmingHistory = farmingLogs,
 
             // Thống kê QR
             qrStats = new
@@ -111,8 +170,7 @@ public class TraceController : ControllerBase
     [HttpGet("verify/{batchCode}")]
     public async Task<IActionResult> VerifyBatch(string batchCode)
     {
-        var batch = await _context.HarvestBatches
-            .Include(b => b.FarmingLogs)
+        var batch = await _context.ProductBatches
             .FirstOrDefaultAsync(b => b.BatchCode == batchCode);
 
         if (batch == null)
@@ -124,27 +182,17 @@ public class TraceController : ControllerBase
             });
         }
 
-        // Check if harvested
-        var isHarvested = batch.Status == "Harvested" || batch.Status == "Exported";
-
-        // Check latest unsafe log
-        var latestUnsafeLog = batch.FarmingLogs
-            .Where(l => l.SafeAfterDate.HasValue && l.SafeAfterDate.Value > DateTime.UtcNow)
-            .OrderByDescending(l => l.SafeAfterDate)
-            .FirstOrDefault();
-
         return Ok(new
         {
             valid = true,
             batchCode = batch.BatchCode,
             isSafe = batch.IsSafe,
-            status = batch.Status,
-            harvestDate = batch.ActualHarvest,
+            status = batch.ExportStatus,
+            packingDate = batch.PackingDate,
+            totalWeight = batch.TotalWeight,
             safetyStatus = batch.IsSafe 
                 ? "✅ Lô hàng ĐẠT tiêu chuẩn an toàn VSTP" 
-                : latestUnsafeLog != null 
-                    ? $"⚠️ Lô hàng sẽ an toàn sau: {latestUnsafeLog.SafeAfterDate:dd/MM/yyyy}"
-                    : "⚠️ Lô hàng CHƯA ĐẠT tiêu chuẩn"
+                : "⚠️ Lô hàng CHƯA ĐẠT tiêu chuẩn"
         });
     }
 }

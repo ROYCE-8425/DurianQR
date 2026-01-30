@@ -13,7 +13,10 @@ public class DurianQRContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Farm> Farms { get; set; }
     public DbSet<DurianTree> DurianTrees { get; set; }
-    public DbSet<HarvestBatch> HarvestBatches { get; set; }
+    public DbSet<Warehouse> Warehouses { get; set; }
+    public DbSet<HarvestRequest> HarvestRequests { get; set; }
+    public DbSet<ProductBatch> ProductBatches { get; set; }
+    public DbSet<BatchHarvestRequest> BatchHarvestRequests { get; set; }
     public DbSet<FarmingLog> FarmingLogs { get; set; }
     public DbSet<Chemical> Chemicals { get; set; }
     public DbSet<BatchQRCode> QRCodes { get; set; }
@@ -27,6 +30,7 @@ public class DurianQRContext : DbContext
         {
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email);
+            entity.HasIndex(e => e.Role);
         });
 
         // Farm configuration
@@ -48,13 +52,59 @@ public class DurianQRContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // HarvestBatch configuration
-        modelBuilder.Entity<HarvestBatch>(entity =>
+        // Warehouse configuration
+        modelBuilder.Entity<Warehouse>(entity =>
+        {
+            entity.HasIndex(e => e.WarehouseName);
+            entity.HasOne(w => w.Manager)
+                  .WithOne(u => u.ManagedWarehouse)
+                  .HasForeignKey<Warehouse>(w => w.ManagerID)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // HarvestRequest configuration
+        modelBuilder.Entity<HarvestRequest>(entity =>
+        {
+            entity.HasIndex(e => e.RequestCode).IsUnique();
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ExpectedHarvestDate);
+            
+            entity.HasOne(r => r.Tree)
+                  .WithMany(t => t.HarvestRequests)
+                  .HasForeignKey(r => r.TreeID)
+                  .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(r => r.Farmer)
+                  .WithMany(u => u.HarvestRequests)
+                  .HasForeignKey(r => r.UserID)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ProductBatch configuration
+        modelBuilder.Entity<ProductBatch>(entity =>
         {
             entity.HasIndex(e => e.BatchCode).IsUnique();
-            entity.HasOne(b => b.Tree)
-                  .WithMany(t => t.Batches)
-                  .HasForeignKey(b => b.TreeID)
+            entity.HasIndex(e => e.ExportStatus);
+            
+            entity.HasOne(b => b.Warehouse)
+                  .WithMany(w => w.ProductBatches)
+                  .HasForeignKey(b => b.WarehouseID)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // BatchHarvestRequest (M-N) configuration
+        modelBuilder.Entity<BatchHarvestRequest>(entity =>
+        {
+            entity.HasIndex(e => new { e.BatchID, e.RequestID }).IsUnique();
+            
+            entity.HasOne(bhr => bhr.Batch)
+                  .WithMany(b => b.HarvestRequests)
+                  .HasForeignKey(bhr => bhr.BatchID)
+                  .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(bhr => bhr.HarvestRequest)
+                  .WithMany(r => r.BatchRequests)
+                  .HasForeignKey(bhr => bhr.RequestID)
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -62,10 +112,17 @@ public class DurianQRContext : DbContext
         modelBuilder.Entity<FarmingLog>(entity =>
         {
             entity.HasIndex(e => e.LogDate);
-            entity.HasOne(l => l.Batch)
-                  .WithMany(b => b.FarmingLogs)
-                  .HasForeignKey(l => l.BatchID)
+            entity.HasIndex(e => e.ActivityType);
+            
+            entity.HasOne(l => l.Tree)
+                  .WithMany(t => t.FarmingLogs)
+                  .HasForeignKey(l => l.TreeID)
                   .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(l => l.Chemical)
+                  .WithMany(c => c.FarmingLogs)
+                  .HasForeignKey(l => l.ChemicalID)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Chemical configuration
@@ -90,6 +147,12 @@ public class DurianQRContext : DbContext
             new Chemical { ChemicalID = 3, ChemicalName = "Imidacloprid", ActiveIngredient = "Imidacloprid 10%", PHI_Days = 14, IsBanned = false, TargetMarket = "VN,CN" },
             new Chemical { ChemicalID = 4, ChemicalName = "Mancozeb", ActiveIngredient = "Mancozeb 80%", PHI_Days = 7, IsBanned = false, TargetMarket = "VN" },
             new Chemical { ChemicalID = 5, ChemicalName = "Thiamethoxam", ActiveIngredient = "Thiamethoxam 25%", PHI_Days = 14, IsBanned = true, TargetMarket = "EU" }
+        );
+
+        // Seed data for Warehouses
+        modelBuilder.Entity<Warehouse>().HasData(
+            new Warehouse { WarehouseID = 1, WarehouseName = "HTX Krông Pắk", Location = "Huyện Krông Pắk, Đắk Lắk" },
+            new Warehouse { WarehouseID = 2, WarehouseName = "HTX Cư M'gar", Location = "Huyện Cư M'gar, Đắk Lắk" }
         );
     }
 }

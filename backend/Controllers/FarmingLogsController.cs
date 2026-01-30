@@ -21,7 +21,9 @@ public class FarmingLogsController : ControllerBase
     public async Task<ActionResult<IEnumerable<FarmingLog>>> GetLogs()
     {
         return await _context.FarmingLogs
-            .Include(l => l.Batch)
+            .Include(l => l.Tree)
+                .ThenInclude(t => t!.Farm)
+            .Include(l => l.Chemical)
             .OrderByDescending(l => l.LogDate)
             .ToListAsync();
     }
@@ -31,7 +33,8 @@ public class FarmingLogsController : ControllerBase
     public async Task<ActionResult<FarmingLog>> GetLog(int id)
     {
         var log = await _context.FarmingLogs
-            .Include(l => l.Batch)
+            .Include(l => l.Tree)
+            .Include(l => l.Chemical)
             .FirstOrDefaultAsync(l => l.LogID == id);
 
         if (log == null)
@@ -42,25 +45,58 @@ public class FarmingLogsController : ControllerBase
         return log;
     }
 
-    // GET: api/farminglogs/batch/5 - Get logs by batch
-    [HttpGet("batch/{batchId}")]
-    public async Task<ActionResult<IEnumerable<FarmingLog>>> GetLogsByBatch(int batchId)
+    // GET: api/farminglogs/tree/5 - Get logs by tree
+    [HttpGet("tree/{treeId}")]
+    public async Task<ActionResult<IEnumerable<FarmingLog>>> GetLogsByTree(int treeId)
     {
         return await _context.FarmingLogs
-            .Where(l => l.BatchID == batchId)
+            .Where(l => l.TreeID == treeId)
+            .Include(l => l.Chemical)
+            .OrderByDescending(l => l.LogDate)
+            .ToListAsync();
+    }
+
+    // GET: api/farminglogs/farm/5 - Get logs by farm
+    [HttpGet("farm/{farmId}")]
+    public async Task<ActionResult<IEnumerable<FarmingLog>>> GetLogsByFarm(int farmId)
+    {
+        return await _context.FarmingLogs
+            .Where(l => l.Tree!.FarmID == farmId)
+            .Include(l => l.Tree)
+            .Include(l => l.Chemical)
             .OrderByDescending(l => l.LogDate)
             .ToListAsync();
     }
 
     // POST: api/farminglogs
     [HttpPost]
-    public async Task<ActionResult<FarmingLog>> CreateLog(FarmingLog log)
+    public async Task<ActionResult<FarmingLog>> CreateLog([FromBody] CreateFarmingLogDTO dto)
     {
+        // Validate tree
+        var tree = await _context.DurianTrees.FindAsync(dto.TreeId);
+        if (tree == null)
+        {
+            return NotFound(new { message = "Không tìm thấy cây" });
+        }
+
+        var log = new FarmingLog
+        {
+            TreeID = dto.TreeId,
+            LogDate = dto.LogDate ?? DateTime.UtcNow,
+            ActivityType = dto.ActivityType,
+            Description = dto.Description,
+            ChemicalUsed = dto.ChemicalUsed,
+            DosageAmount = dto.DosageAmount,
+            Unit = dto.Unit,
+            ImagePath = dto.ImagePath,
+            CreatedAt = DateTime.UtcNow
+        };
+
         // Validate chemical if specified
-        if (!string.IsNullOrEmpty(log.ChemicalUsed))
+        if (!string.IsNullOrEmpty(dto.ChemicalUsed))
         {
             var chemical = await _context.Chemicals
-                .FirstOrDefaultAsync(c => c.ChemicalName.ToLower().Contains(log.ChemicalUsed.ToLower()));
+                .FirstOrDefaultAsync(c => c.ChemicalName.ToLower().Contains(dto.ChemicalUsed.ToLower()));
 
             if (chemical != null)
             {
@@ -75,24 +111,27 @@ public class FarmingLogsController : ControllerBase
                 }
 
                 // Calculate SafeAfterDate based on PHI
+                log.ChemicalID = chemical.ChemicalID;
                 log.SafetyDays = chemical.PHI_Days;
                 log.SafeAfterDate = log.LogDate.AddDays(chemical.PHI_Days);
                 log.IsAutoValidated = true;
             }
+            else if (dto.SafetyDays.HasValue)
+            {
+                // Use custom PHI if chemical not found in database
+                log.SafetyDays = dto.SafetyDays;
+                log.SafeAfterDate = log.LogDate.AddDays(dto.SafetyDays.Value);
+            }
         }
 
-        log.CreatedAt = DateTime.UtcNow;
         _context.FarmingLogs.Add(log);
         await _context.SaveChangesAsync();
-
-        // Update batch safety status
-        await UpdateBatchSafetyStatus(log.BatchID);
 
         return CreatedAtAction(nameof(GetLog), new { id = log.LogID }, new 
         { 
             log, 
             warning = log.SafeAfterDate.HasValue 
-                ? $"⚠️ Lô hàng sẽ an toàn sau ngày: {log.SafeAfterDate:dd/MM/yyyy}" 
+                ? $"⚠️ Cây sẽ an toàn thu hoạch sau ngày: {log.SafeAfterDate:dd/MM/yyyy}" 
                 : null 
         });
     }
@@ -111,7 +150,6 @@ public class FarmingLogsController : ControllerBase
         try
         {
             await _context.SaveChangesAsync();
-            await UpdateBatchSafetyStatus(log.BatchID);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -135,31 +173,23 @@ public class FarmingLogsController : ControllerBase
             return NotFound(new { message = "Log not found" });
         }
 
-        var batchId = log.BatchID;
         _context.FarmingLogs.Remove(log);
         await _context.SaveChangesAsync();
 
-        // Update batch safety status after deletion
-        await UpdateBatchSafetyStatus(batchId);
-
         return NoContent();
     }
+}
 
-    // Helper method to update batch safety status
-    private async Task UpdateBatchSafetyStatus(int batchId)
-    {
-        var batch = await _context.HarvestBatches
-            .Include(b => b.FarmingLogs)
-            .FirstOrDefaultAsync(b => b.BatchID == batchId);
-
-        if (batch != null)
-        {
-            // Check if any log has SafeAfterDate in the future
-            var hasUnsafeLogs = batch.FarmingLogs
-                .Any(l => l.SafeAfterDate.HasValue && l.SafeAfterDate.Value > DateTime.UtcNow);
-
-            batch.IsSafe = !hasUnsafeLogs;
-            await _context.SaveChangesAsync();
-        }
-    }
+// DTO
+public class CreateFarmingLogDTO
+{
+    public int TreeId { get; set; }
+    public DateTime? LogDate { get; set; }
+    public string ActivityType { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? ChemicalUsed { get; set; }
+    public decimal? DosageAmount { get; set; }
+    public string? Unit { get; set; }
+    public int? SafetyDays { get; set; }
+    public string? ImagePath { get; set; }
 }

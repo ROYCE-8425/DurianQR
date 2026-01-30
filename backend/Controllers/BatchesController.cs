@@ -16,25 +16,32 @@ public class BatchesController : ControllerBase
         _context = context;
     }
 
-    // GET: api/batches
+    // GET: api/batches - Lấy tất cả lô sản phẩm
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<HarvestBatch>>> GetBatches()
+    public async Task<ActionResult<IEnumerable<ProductBatch>>> GetBatches()
     {
-        return await _context.HarvestBatches
-            .Include(b => b.Tree)
-                .ThenInclude(t => t!.Farm)
-            .Include(b => b.FarmingLogs)
+        return await _context.ProductBatches
+            .Include(b => b.Warehouse)
+            .Include(b => b.HarvestRequests)
+                .ThenInclude(hr => hr.HarvestRequest)
+                    .ThenInclude(r => r!.Tree)
+                        .ThenInclude(t => t!.Farm)
+            .Include(b => b.QRCodes)
+            .OrderByDescending(b => b.CreatedAt)
             .ToListAsync();
     }
 
     // GET: api/batches/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<HarvestBatch>> GetBatch(int id)
+    public async Task<ActionResult<ProductBatch>> GetBatch(int id)
     {
-        var batch = await _context.HarvestBatches
-            .Include(b => b.Tree)
-                .ThenInclude(t => t!.Farm)
-            .Include(b => b.FarmingLogs)
+        var batch = await _context.ProductBatches
+            .Include(b => b.Warehouse)
+            .Include(b => b.HarvestRequests)
+                .ThenInclude(hr => hr.HarvestRequest)
+                    .ThenInclude(r => r!.Tree)
+                        .ThenInclude(t => t!.Farm)
+                            .ThenInclude(f => f!.User)
             .Include(b => b.QRCodes)
             .FirstOrDefaultAsync(b => b.BatchID == id);
 
@@ -46,15 +53,16 @@ public class BatchesController : ControllerBase
         return batch;
     }
 
-    // GET: api/batches/code/{batchCode} - Get by batch code
+    // GET: api/batches/code/{batchCode}
     [HttpGet("code/{batchCode}")]
-    public async Task<ActionResult<HarvestBatch>> GetBatchByCode(string batchCode)
+    public async Task<ActionResult<ProductBatch>> GetBatchByCode(string batchCode)
     {
-        var batch = await _context.HarvestBatches
-            .Include(b => b.Tree)
-                .ThenInclude(t => t!.Farm)
-                    .ThenInclude(f => f!.User)
-            .Include(b => b.FarmingLogs)
+        var batch = await _context.ProductBatches
+            .Include(b => b.Warehouse)
+            .Include(b => b.HarvestRequests)
+                .ThenInclude(hr => hr.HarvestRequest)
+                    .ThenInclude(r => r!.Farmer)
+            .Include(b => b.QRCodes)
             .FirstOrDefaultAsync(b => b.BatchCode == batchCode);
 
         if (batch == null)
@@ -65,124 +73,116 @@ public class BatchesController : ControllerBase
         return batch;
     }
 
-    // GET: api/batches/tree/5 - Get batches by tree
-    [HttpGet("tree/{treeId}")]
-    public async Task<ActionResult<IEnumerable<HarvestBatch>>> GetBatchesByTree(int treeId)
+    // POST: api/batches/create - Tạo lô sản phẩm từ nhiều HarvestRequests (Bước 4)
+    [HttpPost("create")]
+    public async Task<ActionResult<ProductBatch>> CreateBatch([FromBody] CreateBatchRequest request)
     {
-        return await _context.HarvestBatches
-            .Where(b => b.TreeID == treeId)
-            .Include(b => b.FarmingLogs)
+        // Validate request IDs
+        var harvestRequests = await _context.HarvestRequests
+            .Where(r => request.HarvestRequestIds.Contains(r.RequestID))
+            .Where(r => r.Status == "Completed") // Chỉ lấy những request đã hoàn thành nhập kho
+            .Include(r => r.Tree)
             .ToListAsync();
-    }
 
-    // POST: api/batches
-    [HttpPost]
-    public async Task<ActionResult<HarvestBatch>> CreateBatch(HarvestBatch batch)
-    {
-        // Generate unique batch code if not provided
-        if (string.IsNullOrEmpty(batch.BatchCode))
+        if (!harvestRequests.Any())
         {
-            batch.BatchCode = $"DQR-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
+            return BadRequest(new { message = "Không có yêu cầu thu hoạch hợp lệ để tạo lô" });
         }
 
-        batch.CreatedAt = DateTime.UtcNow;
-        _context.HarvestBatches.Add(batch);
+        // Generate batch code
+        var batchCode = $"BATCH-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
+
+        // Create batch
+        var batch = new ProductBatch
+        {
+            BatchCode = batchCode,
+            WarehouseID = request.WarehouseId,
+            BatchType = harvestRequests.Count > 1 ? "Mixed" : "Single",
+            TotalWeight = harvestRequests.Sum(r => r.ActualQuantity ?? 0),
+            GradeA_Weight = harvestRequests.Sum(r => r.GradeA_Quantity ?? 0),
+            GradeB_Weight = harvestRequests.Sum(r => r.GradeB_Quantity ?? 0),
+            GradeC_Weight = harvestRequests.Sum(r => r.GradeC_Quantity ?? 0),
+            QualityGrade = request.QualityGrade,
+            TargetMarket = request.TargetMarket,
+            PackingDate = DateTime.UtcNow,
+            ExportStatus = "Packed",
+            IsSafe = true, // Đã kiểm tra PHI trước đó
+            Notes = request.Notes,
+            CreatedBy = request.CreatedBy,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.ProductBatches.Add(batch);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetBatch), new { id = batch.BatchID }, batch);
+        // Link harvest requests to batch
+        foreach (var hr in harvestRequests)
+        {
+            var link = new BatchHarvestRequest
+            {
+                BatchID = batch.BatchID,
+                RequestID = hr.RequestID,
+                ContributedWeight = hr.ActualQuantity,
+                AddedAt = DateTime.UtcNow
+            };
+            _context.BatchHarvestRequests.Add(link);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetBatch), new { id = batch.BatchID }, new
+        {
+            batch,
+            message = $"Đã tạo lô {batchCode} từ {harvestRequests.Count} yêu cầu thu hoạch"
+        });
     }
 
-    // PUT: api/batches/5
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateBatch(int id, HarvestBatch batch)
+    // PUT: api/batches/5/status - Cập nhật trạng thái xuất khẩu
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateBatchStatus(int id, [FromBody] UpdateStatusRequest request)
     {
-        if (id != batch.BatchID)
+        var batch = await _context.ProductBatches.FindAsync(id);
+
+        if (batch == null)
         {
-            return BadRequest(new { message = "ID mismatch" });
+            return NotFound(new { message = "Batch not found" });
         }
 
-        _context.Entry(batch).State = EntityState.Modified;
+        batch.ExportStatus = request.Status;
+        await _context.SaveChangesAsync();
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!await _context.HarvestBatches.AnyAsync(b => b.BatchID == id))
-            {
-                return NotFound(new { message = "Batch not found" });
-            }
-            throw;
-        }
-
-        return NoContent();
+        return Ok(new { message = $"Đã cập nhật trạng thái lô {batch.BatchCode} thành {request.Status}" });
     }
 
     // DELETE: api/batches/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBatch(int id)
     {
-        var batch = await _context.HarvestBatches.FindAsync(id);
+        var batch = await _context.ProductBatches.FindAsync(id);
         if (batch == null)
         {
             return NotFound(new { message = "Batch not found" });
         }
 
-        _context.HarvestBatches.Remove(batch);
+        _context.ProductBatches.Remove(batch);
         await _context.SaveChangesAsync();
 
         return NoContent();
     }
-
-    // PUT: api/batches/5/harvest - Mark batch as harvested
-    [HttpPut("{id}/harvest")]
-    public async Task<IActionResult> HarvestBatch(int id, [FromBody] HarvestRequest request)
-    {
-        var batch = await _context.HarvestBatches
-            .Include(b => b.FarmingLogs)
-            .FirstOrDefaultAsync(b => b.BatchID == id);
-
-        if (batch == null)
-        {
-            return NotFound(new { message = "Batch not found" });
-        }
-
-        // Check safety - all farming logs must have SafeAfterDate before harvest date
-        var unsafeLogs = batch.FarmingLogs
-            .Where(l => l.SafeAfterDate.HasValue && l.SafeAfterDate.Value > request.HarvestDate)
-            .ToList();
-
-        if (unsafeLogs.Any())
-        {
-            batch.IsSafe = false;
-            return BadRequest(new 
-            { 
-                message = "Cannot harvest - safety period not met",
-                unsafeLogs = unsafeLogs.Select(l => new 
-                { 
-                    l.LogID, 
-                    l.ChemicalUsed, 
-                    l.SafeAfterDate 
-                })
-            });
-        }
-
-        batch.ActualHarvest = request.HarvestDate;
-        batch.Quantity = request.Quantity;
-        batch.QualityGrade = request.QualityGrade;
-        batch.Status = "Harvested";
-        batch.IsSafe = true;
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Batch harvested successfully", batch });
-    }
 }
 
-public class HarvestRequest
+// DTOs
+public class CreateBatchRequest
 {
-    public DateTime HarvestDate { get; set; }
-    public decimal? Quantity { get; set; }
+    public List<int> HarvestRequestIds { get; set; } = new();
+    public int? WarehouseId { get; set; }
     public string? QualityGrade { get; set; }
+    public string? TargetMarket { get; set; }
+    public string? Notes { get; set; }
+    public int? CreatedBy { get; set; }
+}
+
+public class UpdateStatusRequest
+{
+    public string Status { get; set; } = string.Empty;
 }

@@ -1,17 +1,21 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
+import '../styles/auth.css';
 
 const Register = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
+    confirmPassword: '',
     fullName: '',
     phone: '',
     email: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,174 +25,262 @@ const Register = () => {
     });
   };
 
+  // Password strength checker
+  const getPasswordStrength = (password) => {
+    if (!password) return null;
+    if (password.length < 6) return 'weak';
+    if (password.length < 10 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) return 'medium';
+    return 'strong';
+  };
+
+  const passwordStrength = getPasswordStrength(formData.password);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError('Mật khẩu xác nhận không khớp!');
+      return;
+    }
+
+    if (!agreeTerms) {
+      setError('Vui lòng đồng ý với điều khoản sử dụng!');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Mật khẩu phải có ít nhất 6 ký tự!');
+      return;
+    }
+
+    setLoading(true);
     
     try {
-      await api.post('/auth/register', formData);
-      setSuccess('Đăng ký thành công! Đang chuyển hướng...');
+      const { confirmPassword, ...registerData } = formData;
+      await api.post('/auth/register', registerData);
+      setSuccess('🎉 Đăng ký thành công! Đang chuyển hướng...');
       setTimeout(() => {
         navigate('/login');
-      }, 1500);
+      }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Đăng ký Tài khoản</h2>
-        {error && <p style={styles.error}>{error}</p>}
-        {success && <p style={styles.success}>{success}</p>}
+    <div className="auth-container">
+      {/* Floating Decorative Elements */}
+      <div className="floating-elements">
+        <div className="floating-bubble bubble-1"></div>
+        <div className="floating-bubble bubble-2"></div>
+        <div className="floating-bubble bubble-3"></div>
+        <div className="floating-bubble bubble-4"></div>
+        <div className="floating-bubble bubble-5"></div>
+        <div className="floating-bubble bubble-6"></div>
         
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.group}>
-            <label>Tên đăng nhập *</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              style={styles.input}
-              required
-            />
+        <div className="floating-durian durian-1">🍈</div>
+        <div className="floating-durian durian-2">🍈</div>
+        <div className="floating-durian durian-3">🌿</div>
+        <div className="floating-durian durian-4">🌿</div>
+      </div>
+
+      {/* Register Card */}
+      <div className="auth-card">
+        {/* Logo Section */}
+        <div className="auth-logo">
+          <span className="auth-logo-icon">🍈</span>
+          <h1 className="auth-title">Đăng ký tài khoản</h1>
+          <p className="auth-subtitle">Tham gia DurianQR ngay hôm nay</p>
+        </div>
+
+        {/* Messages */}
+        {error && (
+          <div className="message message-error">
+            ⚠️ {error}
           </div>
-          
-          <div style={styles.group}>
-            <label>Mật khẩu *</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              style={styles.input}
-              required
-            />
+        )}
+        {success && (
+          <div className="message message-success">
+            {success}
+          </div>
+        )}
+
+        {/* Register Form */}
+        <form onSubmit={handleSubmit} className="auth-form">
+          {/* Full Name Field */}
+          <div className="form-group">
+            <label className="form-label">Họ và tên *</label>
+            <div className="form-input-wrapper">
+              <input
+                type="text"
+                name="fullName"
+                className="form-input"
+                placeholder="Nguyễn Văn A..."
+                value={formData.fullName}
+                onChange={handleChange}
+                required
+              />
+              <span className="form-icon">📝</span>
+            </div>
           </div>
 
-          <div style={styles.group}>
-            <label>Họ và tên *</label>
-            <input
-              type="text"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              style={styles.input}
-              required
-            />
+          {/* Username Field */}
+          <div className="form-group">
+            <label className="form-label">Tên đăng nhập *</label>
+            <div className="form-input-wrapper">
+              <input
+                type="text"
+                name="username"
+                className="form-input"
+                placeholder="username123..."
+                value={formData.username}
+                onChange={handleChange}
+                required
+                autoComplete="username"
+              />
+              <span className="form-icon">👤</span>
+            </div>
           </div>
 
-          <div style={styles.group}>
-            <label>Số điện thoại</label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              style={styles.input}
-            />
+          {/* Email Field */}
+          <div className="form-group">
+            <label className="form-label">Email</label>
+            <div className="form-input-wrapper">
+              <input
+                type="email"
+                name="email"
+                className="form-input"
+                placeholder="email@example.com..."
+                value={formData.email}
+                onChange={handleChange}
+              />
+              <span className="form-icon">📧</span>
+            </div>
           </div>
 
-           <div style={styles.group}>
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              style={styles.input}
-            />
+          {/* Phone Field */}
+          <div className="form-group">
+            <label className="form-label">Số điện thoại</label>
+            <div className="form-input-wrapper">
+              <input
+                type="tel"
+                name="phone"
+                className="form-input"
+                placeholder="0901234567..."
+                value={formData.phone}
+                onChange={handleChange}
+              />
+              <span className="form-icon">📱</span>
+            </div>
           </div>
 
-          <button type="submit" style={styles.button}>Đăng Ký</button>
+          {/* Password Field */}
+          <div className="form-group">
+            <label className="form-label">Mật khẩu *</label>
+            <div className="form-input-wrapper">
+              <input
+                type="password"
+                name="password"
+                className="form-input"
+                placeholder="Tối thiểu 6 ký tự..."
+                value={formData.password}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+              <span className="form-icon">🔒</span>
+            </div>
+            {/* Password Strength Indicator */}
+            {formData.password && (
+              <div className="password-strength">
+                <div className="strength-bar">
+                  <div className={`strength-fill strength-${passwordStrength}`}></div>
+                </div>
+                <span className="strength-text">
+                  {passwordStrength === 'weak' && '⚠️ Mật khẩu yếu'}
+                  {passwordStrength === 'medium' && '🔶 Mật khẩu trung bình'}
+                  {passwordStrength === 'strong' && '✅ Mật khẩu mạnh'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Confirm Password Field */}
+          <div className="form-group">
+            <label className="form-label">Xác nhận mật khẩu *</label>
+            <div className="form-input-wrapper">
+              <input
+                type="password"
+                name="confirmPassword"
+                className="form-input"
+                placeholder="Nhập lại mật khẩu..."
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+              <span className="form-icon">🔐</span>
+            </div>
+            {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+              <span className="strength-text" style={{ color: '#EF4444' }}>
+                ❌ Mật khẩu không khớp
+              </span>
+            )}
+            {formData.confirmPassword && formData.password === formData.confirmPassword && (
+              <span className="strength-text" style={{ color: '#22C55E' }}>
+                ✅ Mật khẩu khớp
+              </span>
+            )}
+          </div>
+
+          {/* Terms Checkbox */}
+          <label className="checkbox-wrapper">
+            <input
+              type="checkbox"
+              className="checkbox-input"
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
+            />
+            <span className="checkbox-label">
+              Tôi đồng ý với <a href="#">Điều khoản sử dụng</a> và{' '}
+              <a href="#">Chính sách bảo mật</a>
+            </span>
+          </label>
+
+          {/* Submit Button */}
+          <button 
+            type="submit" 
+            className="btn-primary"
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="btn-loading">
+                <span className="spinner"></span>
+                Đang đăng ký...
+              </span>
+            ) : (
+              '🚀 Đăng ký ngay'
+            )}
+          </button>
         </form>
-        
-        <div style={styles.footer}>
-          <p>Đã có tài khoản? <Link to="/login" style={styles.link}>Đăng nhập ngay</Link></p>
+
+        {/* Footer Link */}
+        <div className="auth-footer">
+          <p>
+            Đã có tài khoản?{' '}
+            <Link to="/login" className="auth-link">
+              Đăng nhập
+            </Link>
+          </p>
         </div>
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '80vh',
-    background: '#f5f5f5',
-    padding: '20px'
-  },
-  card: {
-    background: 'white',
-    padding: '2rem',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-    width: '100%',
-    maxWidth: '450px'
-  },
-  title: {
-    textAlign: 'center',
-    color: '#2E7D32',
-    marginBottom: '1.5rem'
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem'
-  },
-  group: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem'
-  },
-  input: {
-    padding: '0.75rem',
-    borderRadius: '4px',
-    border: '1px solid #ddd',
-    fontSize: '1rem'
-  },
-  button: {
-    background: '#2E7D32',
-    color: 'white',
-    padding: '0.75rem',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    marginTop: '1rem',
-    fontWeight: 'bold'
-  },
-  error: {
-    color: 'red',
-    textAlign: 'center',
-    marginBottom: '1rem',
-    background: '#ffebee',
-    padding: '0.5rem',
-    borderRadius: '4px'
-  },
-  success: {
-    color: 'green',
-    textAlign: 'center',
-    marginBottom: '1rem',
-    background: '#e8f5e9',
-    padding: '0.5rem',
-    borderRadius: '4px'
-  },
-  footer: {
-    marginTop: '1.5rem',
-    textAlign: 'center',
-    fontSize: '0.9rem'
-  },
-  link: {
-    color: '#2E7D32',
-    textDecoration: 'none',
-    fontWeight: 'bold'
-  }
 };
 
 export default Register;

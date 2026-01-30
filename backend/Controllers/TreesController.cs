@@ -22,7 +22,8 @@ public class TreesController : ControllerBase
     {
         return await _context.DurianTrees
             .Include(t => t.Farm)
-            .Include(t => t.Batches)
+            .Include(t => t.FarmingLogs)
+            .Include(t => t.HarvestRequests)
             .ToListAsync();
     }
 
@@ -32,7 +33,8 @@ public class TreesController : ControllerBase
     {
         var tree = await _context.DurianTrees
             .Include(t => t.Farm)
-            .Include(t => t.Batches)
+            .Include(t => t.FarmingLogs)
+            .Include(t => t.HarvestRequests)
             .FirstOrDefaultAsync(t => t.TreeID == id);
 
         if (tree == null)
@@ -49,7 +51,8 @@ public class TreesController : ControllerBase
     {
         return await _context.DurianTrees
             .Where(t => t.FarmID == farmId)
-            .Include(t => t.Batches)
+            .Include(t => t.FarmingLogs)
+            .Include(t => t.HarvestRequests)
             .ToListAsync();
     }
 

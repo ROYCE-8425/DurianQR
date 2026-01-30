@@ -100,9 +100,6 @@ git push origin feature-login
 
 ## Tóm tắt quy trình 4 bước thần thánh:
 
-1.  `git checkout -b ten-nhanh-moi` (Tạo nhánh)
-2.  Code... Code...
-3.  `git add .` + `git commit` (Lưu)
 4.  `git push` (Đẩy lên mạng)
 
 ---

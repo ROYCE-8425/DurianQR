@@ -9,14 +9,20 @@ import HarvestRequestPage from './pages/HarvestRequestPage';
 import WarehousePage from './pages/WarehousePage';
 import GuidePage from './pages/GuidePage';
 import FarmingLogPage from './pages/FarmingLogPage';
+import FarmerDashboard from './pages/FarmerDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import TraceabilityPage from './pages/TraceabilityPage';
 
-// Layout
+// Layout - Xác định khi nào hiển thị Navbar
 const Layout = ({ children }) => {
   const location = useLocation();
-  const noNavbar = ['/login', '/register'];
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+  // Các trang không có Navbar
+  const noNavbar = ['/login', '/register', '/farmer', '/admin', '/traceability'];
   const publicPages = ['/trace'];
 
-  const hideNavbar = noNavbar.includes(location.pathname) ||
+  const hideNavbar = noNavbar.some(p => location.pathname.startsWith(p)) ||
     publicPages.some(p => location.pathname.startsWith(p));
 
   return (
@@ -36,17 +42,28 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Main */}
+          {/* Main Dashboard */}
           <Route path="/" element={<Dashboard />} />
+
+          {/* Farmer Interface - Mobile First */}
+          <Route path="/farmer" element={<FarmerDashboard />} />
           <Route path="/farming-log" element={<FarmingLogPage />} />
           <Route path="/harvest-request" element={<HarvestRequestPage />} />
+
+          {/* Admin Interface - Desktop Dashboard */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/*" element={<AdminDashboard />} />
           <Route path="/warehouse" element={<WarehousePage />} />
           <Route path="/qr" element={<QRManagement />} />
+
+          {/* Guide */}
           <Route path="/guide" element={<GuidePage />} />
 
-          {/* Public */}
+          {/* Public - Traceability */}
           <Route path="/trace" element={<TracePage />} />
           <Route path="/trace/:batchCode" element={<TracePage />} />
+          <Route path="/traceability" element={<TraceabilityPage />} />
+          <Route path="/traceability/:batchCode" element={<TraceabilityPage />} />
         </Routes>
       </Layout>
     </Router>

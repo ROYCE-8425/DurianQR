@@ -1,0 +1,394 @@
+/* ============================================
+   FARMER MOBILE-FIRST INTERFACE
+   Agriculture Theme - Green Primary
+   ============================================ */
+
+/* Container */
+.farmer-container {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #1B5E20 0%, #0d3318 100%);
+    padding-bottom: 100px;
+    position: relative;
+}
+
+/* Header */
+.farmer-header {
+    background: linear-gradient(135deg, #2E7D32, #4CAF50);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.header-left {
+    flex: 1;
+}
+
+.greeting {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0.3rem 0 0;
+}
+
+.weather-widget {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.8rem 1rem;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.weather-icon {
+    font-size: 2rem;
+}
+
+.weather-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.temp {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+}
+
+.condition {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Alert Box */
+.alert-danger {
+    background: linear-gradient(135deg, #D32F2F, #F44336);
+    margin: 1rem;
+    padding: 1rem 1.2rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    box-shadow: 0 4px 20px rgba(211, 47, 47, 0.4);
+    animation: slideDown 0.4s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    flex: 1;
+}
+
+.alert-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.alert-text {
+    color: white;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.alert-text strong {
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.alert-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Quick Stats */
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    padding: 1rem;
+}
+
+.stat-box {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 1rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.stat-box.stat-warning {
+    background: rgba(255, 152, 0, 0.2);
+    border-color: rgba(255, 152, 0, 0.4);
+}
+
+.stat-icon {
+    font-size: 1.8rem;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: white;
+}
+
+.stat-text {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Activity Section */
+.activity-section {
+    padding: 0 1rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.section-title span {
+    font-size: 1.3rem;
+}
+
+/* Activity Cards */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.activity-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #4CAF50;
+    border-radius: 16px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.activity-card:active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.activity-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.activity-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    margin: 0 0 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activity-details {
+    display: flex;
+    gap: 0.8rem;
+    margin: 0;
+}
+
+.detail-item {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.activity-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 0.8rem;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.date-day {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+}
+
+.date-month {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+}
+
+/* Quick Actions Grid */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    padding: 1.5rem 1rem;
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.action-harvest {
+    background: linear-gradient(135deg, #8BC34A, #4CAF50);
+    box-shadow: 0 6px 25px rgba(76, 175, 80, 0.4);
+}
+
+.action-trace {
+    background: linear-gradient(135deg, #FFC107, #FF9800);
+    box-shadow: 0 6px 25px rgba(255, 152, 0, 0.4);
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+.action-icon {
+    font-size: 2rem;
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #4CAF50, #8BC34A);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 300;
+    text-decoration: none;
+    box-shadow: 0 6px 30px rgba(76, 175, 80, 0.5);
+    z-index: 100;
+    transition: all 0.3s ease;
+}
+
+.fab:active {
+    transform: scale(0.9);
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(13, 51, 24, 0.95);
+    backdrop-filter: blur(20px);
+    display: flex;
+    justify-content: space-around;
+    padding: 0.8rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 99;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+    padding: 0.3rem 1rem;
+}
+
+.nav-item.active {
+    color: #8BC34A;
+}
+
+.nav-icon {
+    font-size: 1.4rem;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .farmer-container {
+        max-width: 480px;
+        margin: 0 auto;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .bottom-nav {
+        max-width: 480px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .fab {
+        right: calc(50% - 240px + 20px);
+    }
+}

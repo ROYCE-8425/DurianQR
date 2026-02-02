@@ -7,21 +7,21 @@ import TracePage from './pages/TracePage';
 import QRManagement from './pages/QRManagement';
 import HarvestRequestPage from './pages/HarvestRequestPage';
 import WarehousePage from './pages/WarehousePage';
+import GuidePage from './pages/GuidePage';
+import FarmingLogPage from './pages/FarmingLogPage';
 
-// Layout component to conditionally show Navbar
+// Layout
 const Layout = ({ children }) => {
   const location = useLocation();
-  // Pages without Navbar
-  const noNavbarPages = ['/login', '/register'];
-  // Pages that are public (also no navbar but different styling)
+  const noNavbar = ['/login', '/register'];
   const publicPages = ['/trace'];
-  
-  const isNoNavbar = noNavbarPages.includes(location.pathname);
-  const isPublicPage = publicPages.some(p => location.pathname.startsWith(p));
+
+  const hideNavbar = noNavbar.includes(location.pathname) ||
+    publicPages.some(p => location.pathname.startsWith(p));
 
   return (
     <div className="App">
-      {!isNoNavbar && !isPublicPage && <Navbar />}
+      {!hideNavbar && <Navbar />}
       {children}
     </div>
   );
@@ -32,17 +32,19 @@ function App() {
     <Router>
       <Layout>
         <Routes>
-          {/* Auth routes */}
+          {/* Auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          
-          {/* Protected routes */}
+
+          {/* Main */}
           <Route path="/" element={<Dashboard />} />
-          <Route path="/qr" element={<QRManagement />} />
+          <Route path="/farming-log" element={<FarmingLogPage />} />
           <Route path="/harvest-request" element={<HarvestRequestPage />} />
           <Route path="/warehouse" element={<WarehousePage />} />
-          
-          {/* Public routes - Truy xuất nguồn gốc */}
+          <Route path="/qr" element={<QRManagement />} />
+          <Route path="/guide" element={<GuidePage />} />
+
+          {/* Public */}
           <Route path="/trace" element={<TracePage />} />
           <Route path="/trace/:batchCode" element={<TracePage />} />
         </Routes>
@@ -52,4 +54,3 @@ function App() {
 }
 
 export default App;
-

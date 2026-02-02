@@ -30,6 +30,30 @@ public class QRController : ControllerBase
             .ToListAsync();
     }
 
+    // GET: api/qr/generate/{batchId} - Generate QR image on-the-fly and return as PNG
+    [HttpGet("generate/{batchId}")]
+    public async Task<IActionResult> GenerateQRImage(int batchId, [FromQuery] int size = 200)
+    {
+        var batch = await _context.ProductBatches.FindAsync(batchId);
+        
+        if (batch == null)
+        {
+            return NotFound(new { message = "Batch không tồn tại" });
+        }
+
+        // Generate trace URL
+        var traceUrl = $"https://durianqr.trannhuy.online/trace/{batch.BatchCode}";
+        
+        // Generate QR Code image using utility
+        int pixelsPerModule = Math.Max(5, size / 25);
+        using var qrGenerator = new QRCodeGenerator();
+        using var qrCodeData = qrGenerator.CreateQrCode(traceUrl, QRCodeGenerator.ECCLevel.Q);
+        using var qrCode = new PngByteQRCode(qrCodeData);
+        var qrBytes = qrCode.GetGraphic(pixelsPerModule);
+        
+        return File(qrBytes, "image/png", $"QR-{batch.BatchCode}.png");
+    }
+
     // GET: api/qr/5
     [HttpGet("{id}")]
     public async Task<ActionResult<BatchQRCode>> GetQRCode(int id)

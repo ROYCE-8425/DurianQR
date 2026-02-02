@@ -11,19 +11,20 @@ const Navbar = () => {
     };
 
     const isActive = (path) => location.pathname === path;
-    const isFarmer = user?.Role === 'Farmer' || !user?.Role;
-    const isAdmin = user?.Role === 'Admin' || user?.Role === 'WarehouseManager';
+    const isFarmer = user?.Role === 'Farmer';
+    const isTrader = user?.Role === 'Trader';
+    const isAdmin = user?.Role === 'Admin';
 
     return (
         <nav style={styles.nav}>
             <div style={styles.container}>
                 {/* Logo */}
                 <Link to="/" style={styles.logo}>
-                    <span style={styles.logoIcon}>🍈</span>
+                    <img src="/logo_durianqr.jpg" alt="DurianQR" style={styles.logoImg} />
                     <span style={styles.logoText}>DurianQR</span>
                 </Link>
 
-                {/* Navigation - Tối giản theo vai trò */}
+                {/* Navigation - Theo vai trò */}
                 <div style={styles.links}>
                     {user ? (
                         <>
@@ -36,7 +37,7 @@ const Navbar = () => {
                             {isFarmer && (
                                 <>
                                     <Link to="/farming-log" style={{ ...styles.link, ...(isActive('/farming-log') ? styles.active : {}) }}>
-                                        📝 Nhật ký canh tác
+                                        📝 Nhật ký
                                     </Link>
                                     <Link to="/harvest-request" style={{ ...styles.link, ...(isActive('/harvest-request') ? styles.active : {}) }}>
                                         🌳 Xin thu hoạch
@@ -44,14 +45,26 @@ const Navbar = () => {
                                 </>
                             )}
 
-                            {/* Admin: Quản lý + Tạo QR */}
-                            {isAdmin && (
+                            {/* Thương lái: Quản lý kho + Tạo QR */}
+                            {isTrader && (
                                 <>
                                     <Link to="/warehouse" style={{ ...styles.link, ...(isActive('/warehouse') ? styles.active : {}) }}>
                                         📦 Quản lý kho
                                     </Link>
                                     <Link to="/qr" style={{ ...styles.link, ...(isActive('/qr') ? styles.active : {}) }}>
                                         🔲 Tạo mã QR
+                                    </Link>
+                                </>
+                            )}
+
+                            {/* Admin: Tất cả chức năng */}
+                            {isAdmin && (
+                                <>
+                                    <Link to="/warehouse" style={{ ...styles.link, ...(isActive('/warehouse') ? styles.active : {}) }}>
+                                        📦 Quản lý
+                                    </Link>
+                                    <Link to="/qr" style={{ ...styles.link, ...(isActive('/qr') ? styles.active : {}) }}>
+                                        🔲 QR
                                     </Link>
                                 </>
                             )}
@@ -106,7 +119,7 @@ const styles = {
         gap: '0.5rem',
         textDecoration: 'none'
     },
-    logoIcon: { fontSize: '2.2rem' },
+    logoImg: { width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover' },
     logoText: { fontSize: '1.6rem', fontWeight: 800, color: '#FFF59D' },
     links: {
         display: 'flex',

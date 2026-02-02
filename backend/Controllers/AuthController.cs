@@ -31,7 +31,7 @@ public class AuthController : ControllerBase
             Username = request.Username,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             FullName = request.FullName,
-            Role = "Farmer",
+            Role = (request.Role == "Trader") ? "Trader" : "Farmer", // Only Farmer or Trader allowed
             Phone = request.Phone,
             Email = request.Email,
             CreatedAt = DateTime.UtcNow

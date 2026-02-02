@@ -10,7 +10,8 @@ const Register = () => {
     confirmPassword: '',
     fullName: '',
     phone: '',
-    email: ''
+    email: '',
+    role: 'Farmer'
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -176,6 +177,24 @@ const Register = () => {
                 onChange={handleChange}
               />
               <span className="form-icon">📱</span>
+            </div>
+          </div>
+
+          {/* Role Selection */}
+          <div className="form-group">
+            <label className="form-label">Bạn là *</label>
+            <div className="form-input-wrapper">
+              <select
+                name="role"
+                className="form-input"
+                value={formData.role}
+                onChange={handleChange}
+                required
+              >
+                <option value="Farmer">🌱 Nông dân - Trồng và chăm sóc sầu riêng</option>
+                <option value="Trader">🚚 Thương lái - Thu mua và xuất khẩu</option>
+              </select>
+              <span className="form-icon">👥</span>
             </div>
           </div>
 

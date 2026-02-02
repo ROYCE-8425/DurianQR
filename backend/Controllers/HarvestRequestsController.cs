@@ -219,7 +219,7 @@ public class HarvestRequestsController : ControllerBase
 
         request.Status = "CheckedIn";
         request.CheckedInAt = DateTime.UtcNow;
-        request.CheckedInBy = dto.WarehouseManagerId;
+        request.CheckedInBy = dto.TraderId;
         request.ActualQuantity = dto.ActualQuantity;
         request.GradeA_Quantity = dto.GradeA;
         request.GradeB_Quantity = dto.GradeB;
@@ -284,7 +284,7 @@ public class CreateHarvestRequestDTO
 
 public class CheckInDTO
 {
-    public int WarehouseManagerId { get; set; }
+    public int TraderId { get; set; }
     public decimal ActualQuantity { get; set; }
     public decimal GradeA { get; set; }
     public decimal GradeB { get; set; }

@@ -3,12 +3,16 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/global.css';
 
+const API_URL = 'http://localhost:5162';
+
 const QRManagement = () => {
   const [batches, setBatches] = useState([]);
   const [qrCodes, setQrCodes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [selectedQR, setSelectedQR] = useState(null); // Modal state
+  const [previewBatch, setPreviewBatch] = useState(null); // Preview before generate
 
   useEffect(() => {
     fetchData();
@@ -39,6 +43,7 @@ const QRManagement = () => {
         type: 'success', 
         text: `✅ Đã tạo QR code thành công!` 
       });
+      setPreviewBatch(null);
       fetchData();
     } catch (err) {
       setMessage({ 
@@ -57,6 +62,13 @@ const QRManagement = () => {
 
   const getQRForBatch = (batchId) => {
     return qrCodes.find(qr => qr.batchID === batchId);
+  };
+
+  const downloadQR = (batchCode, imagePath) => {
+    const link = document.createElement('a');
+    link.href = `${API_URL}${imagePath}`;
+    link.download = `QR-${batchCode}.png`;
+    link.click();
   };
 
   const batchesWithoutQR = batches.filter(b => !getQRForBatch(b.batchID));
@@ -249,9 +261,10 @@ const QRManagement = () => {
                   borderRadius: '16px'
                 }}>
                   <img 
-                    src={`http://localhost:5162${qr.qrImagePath}`}
+                    src={`${API_URL}${qr.qrImagePath}`}
                     alt="QR Code"
-                    style={{ maxWidth: '160px', height: 'auto' }}
+                    style={{ maxWidth: '160px', height: 'auto', cursor: 'pointer' }}
+                    onClick={() => setSelectedQR(qr)}
                     onError={(e) => e.target.style.display = 'none'}
                   />
                 </div>
@@ -272,14 +285,20 @@ const QRManagement = () => {
                     >
                       👁️ Xem
                     </Link>
-                    <a
-                      href={`http://localhost:5162${qr.qrImagePath}`}
-                      download={`QR-${qr.batch?.batchCode}.png`}
+                    <button
+                      onClick={() => setSelectedQR(qr)}
+                      className="btn btn-secondary btn-sm"
+                      style={{ flex: 1 }}
+                    >
+                      🔍 Phóng to
+                    </button>
+                    <button
+                      onClick={() => downloadQR(qr.batch?.batchCode, qr.qrImagePath)}
                       className="btn btn-primary btn-sm"
-                      style={{ flex: 1, textAlign: 'center' }}
+                      style={{ flex: 1 }}
                     >
                       ⬇️ Tải về
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -287,6 +306,64 @@ const QRManagement = () => {
           </div>
         )}
       </div>
+
+      {/* QR Modal */}
+      {selectedQR && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            backdropFilter: 'blur(10px)'
+          }}
+          onClick={() => setSelectedQR(null)}
+        >
+          <div 
+            style={{
+              background: 'white',
+              padding: '2rem',
+              borderRadius: '24px',
+              textAlign: 'center',
+              maxWidth: '90%',
+              animation: 'fadeIn 0.3s ease'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{ marginBottom: '1rem', color: '#1B5E20' }}>
+              🔲 {selectedQR.batch?.batchCode}
+            </h3>
+            <img 
+              src={`${API_URL}${selectedQR.qrImagePath}`}
+              alt="QR Code"
+              style={{ maxWidth: '300px', width: '100%' }}
+            />
+            <p style={{ marginTop: '1rem', color: '#666', fontSize: '0.9rem' }}>
+              Quét để truy xuất nguồn gốc sầu riêng
+            </p>
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button 
+                onClick={() => downloadQR(selectedQR.batch?.batchCode, selectedQR.qrImagePath)}
+                className="btn btn-primary"
+              >
+                ⬇️ Tải về
+              </button>
+              <button 
+                onClick={() => setSelectedQR(null)}
+                className="btn btn-outline"
+              >
+                ✕ Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

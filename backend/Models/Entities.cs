@@ -31,7 +31,7 @@ public class User
 
     [Required]
     [MaxLength(20)]
-    public string Role { get; set; } = "Farmer"; // Farmer, WarehouseManager, Admin
+    public string Role { get; set; } = "Farmer"; // Farmer, Trader, Admin
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

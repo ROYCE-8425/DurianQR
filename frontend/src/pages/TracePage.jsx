@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
+import QRScanner from '../components/QRScanner';
 import '../styles/global.css';
 
 const TracePage = () => {
@@ -9,6 +10,7 @@ const TracePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchCode, setSearchCode] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
     if (batchCode) {
@@ -83,7 +85,27 @@ const TracePage = () => {
         <button type="submit" className="btn btn-primary">
           🔍 Tra cứu
         </button>
+        <button 
+          type="button" 
+          className="btn btn-secondary"
+          onClick={() => setShowScanner(true)}
+          style={{ whiteSpace: 'nowrap' }}
+        >
+          📷 Quét QR
+        </button>
       </form>
+
+      {/* QR Scanner Modal */}
+      {showScanner && (
+        <QRScanner
+          onScanSuccess={(code) => {
+            setShowScanner(false);
+            setSearchCode(code);
+            fetchTraceData(code);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
 
       {/* Loading State */}
       {loading && (
@@ -286,8 +308,15 @@ const TracePage = () => {
       {!data && !loading && !error && !batchCode && (
         <div className="empty-state">
           <div className="icon">📱</div>
-          <h3>Quét mã QR hoặc nhập mã lô hàng</h3>
-          <p>Nhập mã lô hàng vào ô tìm kiếm ở trên để xem thông tin sản phẩm</p>
+          <h3>Truy xuất nguồn gốc sầu riêng</h3>
+          <p>Quét mã QR trên sản phẩm hoặc nhập mã lô hàng để xem thông tin chi tiết</p>
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setShowScanner(true)}
+            style={{ marginTop: '1rem' }}
+          >
+            📷 Quét mã QR ngay
+          </button>
         </div>
       )}
 
@@ -305,8 +334,10 @@ const styles = {
   searchForm: {
     display: 'flex',
     gap: '0.75rem',
-    maxWidth: '500px',
-    margin: '0 auto 2rem'
+    maxWidth: '650px',
+    margin: '0 auto 2rem',
+    flexWrap: 'wrap',
+    justifyContent: 'center'
   },
   searchInput: {
     flex: 1,

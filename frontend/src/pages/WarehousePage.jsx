@@ -151,7 +151,7 @@ const WarehousePage = () => {
       <div className="page-container">
         <div className="loading-container">
           <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)' }}>Đang tải...</p>
+          <p style={{ color: 'var(--color-text-secondary)' }}>Đang tải...</p>
         </div>
       </div>
     );
@@ -466,7 +466,7 @@ const WarehousePage = () => {
                         {batch.qrCodes?.length > 0 ? '✅ Có QR' : '⏳ Chưa có QR'}
                       </span>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
                       <div>📦 Tổng: <strong>{batch.totalWeight}</strong> kg</div>
                       <div>🏷️ {batch.qualityGrade}</div>
                       <div>🌍 {batch.targetMarket}</div>
@@ -512,7 +512,7 @@ const styles = {
     background: 'rgba(255,255,255,0.08)',
     border: '1px solid rgba(255,255,255,0.15)',
     borderRadius: '12px',
-    color: 'var(--text-secondary)',
+    color: 'var(--color-text-secondary)',
     cursor: 'pointer',
     transition: 'all 0.3s ease'
   },
@@ -533,7 +533,7 @@ const styles = {
   label: {
     display: 'block',
     marginBottom: '0.5rem',
-    color: 'var(--text-secondary)',
+    color: 'var(--color-text-secondary)',
     fontSize: '0.9rem'
   },
   input: {
@@ -585,7 +585,7 @@ const tableStyles = `
   .glass-card table th {
     background: rgba(255,255,255,0.05);
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--color-text-secondary);
   }
   .glass-card table tr:hover td {
     background: rgba(255,255,255,0.05);

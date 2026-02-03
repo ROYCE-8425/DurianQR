@@ -45,7 +45,8 @@ const Dashboard = () => {
     };
 
     if (user) fetchData();
-    else setLoading(false);
+    // Demo data for landing page stats can be mocked or fetched similarly
+    setLoading(false); 
   }, []);
 
   const formatDate = (dateString) => {
@@ -53,426 +54,217 @@ const Dashboard = () => {
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
-  // Footer Component with Contact Info
+  // CLEAN FOOTER
   const Footer = () => (
-    <footer className="page-footer" style={{ marginTop: '4rem' }}>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '3rem',
-        maxWidth: '1400px',
-        margin: '0 auto 3rem',
-        textAlign: 'left'
-      }}>
-        {/* About */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem' }}>
-            <span style={{ fontSize: '2.5rem' }}>🍈</span>
-            <span style={{ fontSize: '1.8rem', fontWeight: 700, background: 'linear-gradient(135deg, #81C784, #FFF59D)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>DurianQR</span>
+    <footer className="footer" style={{ borderTop: '1px solid var(--color-border)', marginTop: '4rem', padding: '3rem 0', background: 'white' }}>
+      <div className="container">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
+          <div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--color-primary)' }}>DurianQR</h3>
+            <p className="text-muted">Minh bạch nông sản Việt - Nâng tầm giá trị sầu riêng.</p>
           </div>
-          <p style={{ color: 'var(--text-secondary)', lineHeight: '1.8', fontSize: '1.1rem' }}>
-            Hệ thống truy xuất nguồn gốc sầu riêng thông minh - Minh bạch từ nông trại đến bàn ăn.
-          </p>
+          <div>
+            <h4 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Liên hệ</h4>
+            <ul style={{ listStyle: 'none', padding: 0, color: 'var(--color-text-secondary)' }}>
+              <li className="mb-2">📍 HUTECH, TP.HCM</li>
+              <li className="mb-2">📞 1900 xxxx</li>
+              <li>✉️ support@durianqr.vn</li>
+            </ul>
+          </div>
         </div>
-
-        {/* Contact Info */}
-        <div>
-          <h4 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--primary-yellow)', marginBottom: '1.5rem' }}>
-            📞 Liên hệ
-          </h4>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
-              <span>🏢</span>
-              <span>HUTECH - TP. Hồ Chí Minh</span>
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
-              <span>📍</span>
-              <span>475A Điện Biên Phủ, Q. Bình Thạnh</span>
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
-              <span>📱</span>
-              <span>Hotline: 1900 xxxx xx</span>
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
-              <span>✉️</span>
-              <span>support@durianqr.vn</span>
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
-              <span>⏰</span>
-              <span>T2 - T7: 8:00 - 17:30</span>
-            </li>
-          </ul>
+        <div className="text-center text-muted" style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
+          <small>© 2026 DurianQR. All rights reserved.</small>
         </div>
-
-        {/* Quick Links */}
-        <div>
-          <h4 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--primary-yellow)', marginBottom: '1.5rem' }}>
-            🔗 Liên kết nhanh
-          </h4>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            <li style={{ marginBottom: '0.8rem' }}>
-              <Link to="/" style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', textDecoration: 'none', transition: 'color 0.3s' }}>
-                🏠 Trang chủ
-              </Link>
-            </li>
-            <li style={{ marginBottom: '0.8rem' }}>
-              <Link to="/trace" style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', textDecoration: 'none' }}>
-                🔍 Truy xuất nguồn gốc
-              </Link>
-            </li>
-            <li style={{ marginBottom: '0.8rem' }}>
-              <Link to="/guide" style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', textDecoration: 'none' }}>
-                📖 Hướng dẫn sử dụng
-              </Link>
-            </li>
-            <li style={{ marginBottom: '0.8rem' }}>
-              <a href="#" style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', textDecoration: 'none' }}>
-                📋 Chính sách bảo mật
-              </a>
-            </li>
-            <li>
-              <a href="#" style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', textDecoration: 'none' }}>
-                📜 Điều khoản sử dụng
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Copyright */}
-      <div style={{
-        borderTop: '1px solid var(--glass-border)',
-        paddingTop: '2rem',
-        textAlign: 'center'
-      }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
-          © 2026 DurianQR. Bản quyền thuộc về <strong style={{ color: 'var(--primary-yellow)' }}>HUTECH</strong>.
-        </p>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '0.5rem' }}>
-          Phát triển bởi Team DurianQR 🍈
-        </p>
       </div>
     </footer>
   );
 
-  // Not logged in - Landing Page
+  // LANDING PAGE (Not Logged In)
   if (!user) {
     return (
-      <div className="page-container">
-        {/* Hero Section */}
-        <div className="hero-section">
-          <span className="hero-icon">🍈</span>
-          <h1 className="hero-title">DurianQR</h1>
-          <p className="hero-description">
-            Hệ thống truy xuất nguồn gốc sầu riêng thông minh - Minh bạch từ nông trại đến bàn ăn
-          </p>
-          <div className="btn-group" style={{ justifyContent: 'center' }}>
-            <Link to="/login" className="btn btn-accent btn-lg">
-              🔐 Đăng nhập
-            </Link>
-            <Link to="/register" className="btn btn-outline btn-lg">
-              📝 Đăng ký tài khoản
-            </Link>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="quick-actions">
-          <Link to="/login" className="quick-action-btn">
-            <span className="icon">🔐</span>
-            <span>Đăng nhập</span>
-          </Link>
-          <Link to="/register" className="quick-action-btn">
-            <span className="icon">📝</span>
-            <span>Đăng ký</span>
-          </Link>
-          <Link to="/trace" className="quick-action-btn">
-            <span className="icon">🔍</span>
-            <span>Truy xuất nguồn gốc</span>
-          </Link>
-          <Link to="/guide" className="quick-action-btn">
-            <span className="icon">📖</span>
-            <span>Hướng dẫn sử dụng</span>
-          </Link>
-        </div>
-
-        {/* Features Section */}
-        <div className="section">
-          <div className="section-header">
-            <h2 className="section-title">
-              <span>✨</span> Tính năng nổi bật
-            </h2>
-          </div>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">📱</div>
-              <div className="stat-value">QR</div>
-              <div className="stat-label">Quét mã nhanh chóng</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">🌳</div>
-              <div className="stat-value">100%</div>
-              <div className="stat-label">Theo dõi nguồn gốc</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">📊</div>
-              <div className="stat-value">24/7</div>
-              <div className="stat-label">Giám sát liên tục</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">✅</div>
-              <div className="stat-value">VietGAP</div>
-              <div className="stat-label">Tiêu chuẩn chất lượng</div>
+      <div className="landing-page">
+        {/* Hero */}
+        <div style={{ background: 'white', padding: '6rem 0', textAlign: 'center' }}>
+          <div className="container">
+            <h1 style={{ fontSize: '3.5rem', marginBottom: '1.5rem', color: 'var(--color-text-main)' }}>
+              Truy xuất nguồn gốc <span className="text-primary">Sầu Riêng</span>
+            </h1>
+            <p style={{ fontSize: '1.25rem', color: 'var(--color-text-secondary)', maxWidth: '700px', margin: '0 auto 2.5rem' }}>
+              Giải pháp công nghệ minh bạch hành trình từ nông trại đến bàn ăn. 
+              Bảo vệ thương hiệu, nâng cao niềm tin người tiêu dùng.
+            </p>
+            <div className="flex gap-4" style={{ justifyContent: 'center' }}>
+              <Link to="/trace" className="btn btn-primary btn-lg">🔍 Truy xuất ngay</Link>
+              <Link to="/login" className="btn btn-secondary btn-lg">🔐 Đăng nhập</Link>
             </div>
           </div>
         </div>
 
-        {/* Why DurianQR Section */}
-        <div className="section">
-          <div className="section-header">
-            <h2 className="section-title">
-              <span>🎯</span> Tại sao chọn DurianQR?
-            </h2>
-          </div>
-          <div className="content-grid">
-            <div className="glass-card">
-              <div className="card-header">
-                <h3 className="card-title">
-                  <span className="icon">🔒</span>
-                  An toàn thực phẩm
-                </h3>
+        {/* Stats Strip */}
+        <div style={{ background: 'var(--color-primary)', padding: '3rem 0', color: 'white' }}>
+          <div className="container">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem', textAlign: 'center' }}>
+              <div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>100%</div>
+                <div style={{ opacity: 0.9 }}>Minh bạch</div>
               </div>
-              <div className="card-body">
-                <p style={{ lineHeight: '1.8' }}>
-                  Kiểm soát thời gian cách ly sau phun thuốc BVTV, đảm bảo sản phẩm an toàn cho người tiêu dùng và đạt chuẩn xuất khẩu.
-                </p>
+              <div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>24/7</div>
+                <div style={{ opacity: 0.9 }}>Giám sát</div>
               </div>
-            </div>
-            <div className="glass-card">
-              <div className="card-header">
-                <h3 className="card-title">
-                  <span className="icon">📈</span>
-                  Tăng giá trị sản phẩm
-                </h3>
+              <div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>VietGAP</div>
+                <div style={{ opacity: 0.9 }}>Tiêu chuẩn</div>
               </div>
-              <div className="card-body">
-                <p style={{ lineHeight: '1.8' }}>
-                  Sản phẩm có truy xuất nguồn gốc rõ ràng được khách hàng tin tưởng, sẵn sàng trả giá cao hơn 15-30%.
-                </p>
-              </div>
-            </div>
-            <div className="glass-card">
-              <div className="card-header">
-                <h3 className="card-title">
-                  <span className="icon">🛡️</span>
-                  Bảo vệ thương hiệu
-                </h3>
-              </div>
-              <div className="card-body">
-                <p style={{ lineHeight: '1.8' }}>
-                  Nếu có sự cố về chất lượng, dễ dàng xác định nguồn gốc để xử lý, tránh ảnh hưởng toàn bộ mã số vùng trồng.
-                </p>
+              <div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>500+</div>
+                <div style={{ opacity: 0.9 }}>Nông hộ</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer with Contact */}
+        {/* Features */}
+        <div style={{ padding: '5rem 0' }}>
+          <div className="container">
+            <div className="text-center mb-4">
+              <h2 className="section-title" style={{ justifyContent: 'center' }}>Tính năng nổi bật</h2>
+              <p className="text-muted">Công nghệ hỗ trợ toàn diện cho nông dân và doanh nghiệp</p>
+            </div>
+            
+            <div className="content-grid">
+              <div className="card text-center">
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📱</div>
+                <h3 className="card-title mb-2">Nhật ký điện tử</h3>
+                <p className="text-muted">Ghi chép quy trình canh tác dễ dàng trên điện thoại. Tự động cảnh báo cách ly an toàn.</p>
+              </div>
+              <div className="card text-center">
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏭</div>
+                <h3 className="card-title mb-2">Quản lý kho</h3>
+                <p className="text-muted">Theo dõi tồn kho, nhập xuất lô hàng chính xác. Tối ưu hóa vận hành.</p>
+              </div>
+              <div className="card text-center">
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔲</div>
+                <h3 className="card-title mb-2">QR Code thông minh</h3>
+                <p className="text-muted">Mỗi trái sầu riêng một mã định danh duy nhất. Chống giả mạo tuyệt đối.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <Footer />
       </div>
     );
   }
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="page-container">
-        <div className="loading-container">
-          <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-lg)' }}>Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Logged in - Dashboard
+  // LOGGED IN DASHBOARD
   return (
-    <div className="page-container">
+    <div className="container" style={{ paddingTop: '2rem' }}>
       {/* Header */}
-      <div className="page-header">
-        <span className="page-icon">🍈</span>
-        <h1 className="page-title">Xin chào, {user.fullName || user.Username}!</h1>
-        <p className="page-subtitle">Tổng quan hệ thống quản lý nông trại sầu riêng</p>
+      <div className="page-header flex justify-between items-center">
+        <div>
+          <h1 className="page-title">Xin chào, {user.fullName || user.Username}! 👋</h1>
+          <p className="page-subtitle">Hôm nay bạn muốn làm gì?</p>
+        </div>
+        <div className="text-muted">{new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
       </div>
 
       {/* Quick Actions */}
-      <div className="quick-actions">
-        <Link to="/qr" className="quick-action-btn">
-          <span className="icon">🔲</span>
-          <span>Tạo QR Code</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
+        <Link to="/qr" className="card hover-lift" style={{ textDecoration: 'none', textAlign: 'center', background: 'white' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔲</div>
+          <div style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>Tạo QR Code</div>
         </Link>
-        <Link to="/trace" className="quick-action-btn">
-          <span className="icon">🔍</span>
-          <span>Truy xuất nguồn gốc</span>
+        <Link to="/trace" className="card hover-lift" style={{ textDecoration: 'none', textAlign: 'center', background: 'white' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔍</div>
+          <div style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>Truy xuất</div>
         </Link>
-        <Link to="/harvest-request" className="quick-action-btn">
-          <span className="icon">📋</span>
-          <span>Yêu cầu thu hoạch</span>
+        <Link to="/harvest-request" className="card hover-lift" style={{ textDecoration: 'none', textAlign: 'center', background: 'white' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📋</div>
+          <div style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>Yêu cầu thu hoạch</div>
         </Link>
-        <Link to="/warehouse" className="quick-action-btn">
-          <span className="icon">🏭</span>
-          <span>Quản lý kho</span>
-        </Link>
-        <Link to="/guide" className="quick-action-btn">
-          <span className="icon">📖</span>
-          <span>Hướng dẫn sử dụng</span>
+        <Link to="/guide" className="card hover-lift" style={{ textDecoration: 'none', textAlign: 'center', background: 'white' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📖</div>
+          <div style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>Hướng dẫn</div>
         </Link>
       </div>
 
-      {/* Stats Grid */}
-      <div className="stats-grid">
+      {/* Stats */}
+      <div className="stats-row mb-4">
         <div className="stat-card">
+          <div className="stat-info">
+            <span className="stat-label">Nông trại</span>
+            <span className="stat-value">{stats.farms}</span>
+          </div>
           <div className="stat-icon">🏡</div>
-          <div className="stat-value">{stats.farms}</div>
-          <div className="stat-label">Nông trại</div>
         </div>
         <div className="stat-card">
+          <div className="stat-info">
+            <span className="stat-label">Cây sầu riêng</span>
+            <span className="stat-value">{stats.trees}</span>
+          </div>
           <div className="stat-icon">🌳</div>
-          <div className="stat-value">{stats.trees}</div>
-          <div className="stat-label">Cây sầu riêng</div>
         </div>
         <div className="stat-card">
+          <div className="stat-info">
+            <span className="stat-label">Lô thu hoạch</span>
+            <span className="stat-value">{stats.batches}</span>
+          </div>
           <div className="stat-icon">📦</div>
-          <div className="stat-value">{stats.batches}</div>
-          <div className="stat-label">Lô thu hoạch</div>
         </div>
         <div className="stat-card">
+          <div className="stat-info">
+            <span className="stat-label">Mã QR</span>
+            <span className="stat-value">{stats.qrcodes}</span>
+          </div>
           <div className="stat-icon">🔲</div>
-          <div className="stat-value">{stats.qrcodes}</div>
-          <div className="stat-label">QR Code</div>
         </div>
       </div>
 
-      {/* Farms Section */}
-      <div className="section" id="farms">
-        <div className="section-header">
-          <h2 className="section-title">
-            <span>🏡</span> Nông trại của bạn
-          </h2>
-          <button className="btn btn-primary">+ Thêm nông trại mới</button>
+      {/* Recent Activity Section */}
+      <h2 className="section-title mb-3">Hoạt động gần đây</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+        
+        {/* Batches Column */}
+        <div>
+          {recentBatches.length === 0 ? (
+             <div className="card text-center p-5">
+               <div className="text-muted mb-3">Chưa có lô hàng nào</div>
+               <Link to="/harvest-request" className="btn btn-primary btn-sm">Tạo yêu cầu ngay</Link>
+             </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {recentBatches.map(batch => (
+                <div key={batch.batchID} className="card flex justify-between items-center p-3">
+                  <div className="flex gap-3 items-center">
+                    <div style={{ background: '#EFF6FF', padding: '0.5rem', borderRadius: '8px' }}>📦</div>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{batch.batchCode}</div>
+                      <div className="text-muted" style={{ fontSize: '0.85rem' }}>{formatDate(batch.actualHarvest)}</div>
+                    </div>
+                  </div>
+                  <div>
+                    <span className={`badge ${batch.isSafe ? 'badge-success' : 'badge-warning'}`}>
+                      {batch.isSafe ? 'An toàn' : 'Chờ duyệt'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {farms.length === 0 ? (
-          <div className="empty-state">
-            <div className="icon">🌱</div>
-            <h3>Chưa có nông trại nào</h3>
-            <p>Bắt đầu bằng cách thêm nông trại đầu tiên của bạn</p>
-            <button className="btn btn-accent" style={{ marginTop: '1.5rem' }}>
-              + Thêm nông trại
-            </button>
-          </div>
-        ) : (
-          <div className="content-grid">
-            {farms.map((farm, index) => (
-              <div
-                key={farm.farmID}
-                className="glass-card"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="card-header">
-                  <h3 className="card-title">
-                    <span className="icon">🏡</span>
-                    {farm.farmName}
-                  </h3>
-                  <span className="card-badge badge-success">Hoạt động</span>
-                </div>
-                <div className="card-body">
-                  <div className="card-row">
-                    <span className="card-row-label">📍 Vị trí</span>
-                    <span className="card-row-value">{farm.location || 'Chưa cập nhật'}</span>
-                  </div>
-                  <div className="card-row">
-                    <span className="card-row-label">📐 Diện tích</span>
-                    <span className="card-row-value">{farm.area ? `${farm.area} ha` : 'N/A'}</span>
-                  </div>
-                  <div className="card-row">
-                    <span className="card-row-label">🌳 Số cây</span>
-                    <span className="card-row-value">{farm.trees?.length || 0} cây</span>
-                  </div>
-                </div>
-                <div className="card-footer">
-                  <div className="btn-group">
-                    <button className="btn btn-outline btn-sm">Xem chi tiết</button>
-                    <button className="btn btn-secondary btn-sm">Chỉnh sửa</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Recent Batches Section */}
-      <div className="section" id="batches">
-        <div className="section-header">
-          <h2 className="section-title">
-            <span>📦</span> Lô hàng gần đây
-          </h2>
-          <Link to="/qr" className="btn btn-primary">Quản lý QR Code</Link>
+        {/* Quick Tips / Notifications */}
+        <div className="card">
+          <h3 className="card-title mb-3">🔔 Thông báo</h3>
+          <ul style={{ paddingLeft: '1.2rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
+            <li className="mb-2">Nhớ cập nhật nhật ký canh tác sau mỗi lần phun thuốc.</li>
+            <li className="mb-2">Kiểm tra thời gian cách ly trước khi gửi yêu cầu thu hoạch.</li>
+            <li>Cập nhật thông tin nông trại đầy đủ để tăng độ uy tín.</li>
+          </ul>
         </div>
-
-        {recentBatches.length === 0 ? (
-          <div className="empty-state">
-            <div className="icon">📦</div>
-            <h3>Chưa có lô hàng nào</h3>
-            <p>Các lô thu hoạch sẽ xuất hiện tại đây sau khi bạn tạo</p>
-          </div>
-        ) : (
-          <div className="content-grid">
-            {recentBatches.map((batch, index) => (
-              <div
-                key={batch.batchID}
-                className="glass-card"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="card-header">
-                  <h3 className="card-title">
-                    <span className="icon">📦</span>
-                    {batch.batchCode}
-                  </h3>
-                  <span className={`card-badge ${batch.isSafe ? 'badge-success' : 'badge-warning'}`}>
-                    {batch.isSafe ? '✅ An toàn' : '⏳ Đang chờ'}
-                  </span>
-                </div>
-                <div className="card-body">
-                  <div className="card-row">
-                    <span className="card-row-label">📊 Trạng thái</span>
-                    <span className="card-row-value">{batch.status}</span>
-                  </div>
-                  <div className="card-row">
-                    <span className="card-row-label">📅 Thu hoạch</span>
-                    <span className="card-row-value">{formatDate(batch.actualHarvest)}</span>
-                  </div>
-                  <div className="card-row">
-                    <span className="card-row-label">⚖️ Khối lượng</span>
-                    <span className="card-row-value">{batch.quantity ? `${batch.quantity} kg` : 'N/A'}</span>
-                  </div>
-                </div>
-                <div className="card-footer">
-                  <div className="btn-group">
-                    <Link to={`/trace/${batch.batchCode}`} className="btn btn-outline btn-sm">
-                      🔍 Xem truy xuất
-                    </Link>
-                    <button className="btn btn-secondary btn-sm">🔲 Tạo QR</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* Footer with Contact */}
       <Footer />
     </div>
   );

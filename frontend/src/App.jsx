@@ -12,6 +12,8 @@ import FarmingLogPage from './pages/FarmingLogPage';
 import FarmerDashboard from './pages/FarmerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import TraceabilityPage from './pages/TraceabilityPage';
+import ChemicalManagement from './pages/ChemicalManagement';
+import UserManagement from './pages/UserManagement';
 
 // Layout - Xác định khi nào hiển thị Navbar
 const Layout = ({ children }) => {
@@ -52,6 +54,8 @@ function App() {
 
           {/* Admin Interface - Desktop Dashboard */}
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/chemicals" element={<ChemicalManagement />} />
+          <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/*" element={<AdminDashboard />} />
           <Route path="/warehouse" element={<WarehousePage />} />
           <Route path="/qr" element={<QRManagement />} />

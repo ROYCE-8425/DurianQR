@@ -130,7 +130,7 @@ const Login = () => {
             💬
           </button>
         </div>
-
+{/* demo chuong */}
         {/* Footer Link */}
         <div className="auth-footer">
           <p>
@@ -140,7 +140,7 @@ const Login = () => {
             </Link>
           </p>
         </div>
-      </div>
+      </div>  d 
     </div>
   );
 };

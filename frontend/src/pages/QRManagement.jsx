@@ -78,7 +78,7 @@ const QRManagement = () => {
       <div className="page-container">
         <div className="loading-container">
           <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)' }}>Đang tải...</p>
+          <p style={{ color: 'var(--color-text-secondary)' }}>Đang tải...</p>
         </div>
       </div>
     );

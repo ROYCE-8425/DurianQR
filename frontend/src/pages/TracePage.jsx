@@ -111,7 +111,7 @@ const TracePage = () => {
       {loading && (
         <div className="loading-container">
           <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)' }}>Đang truy xuất thông tin...</p>
+          <p style={{ color: 'var(--color-text-secondary)' }}>Đang truy xuất thông tin...</p>
         </div>
       )}
 
@@ -397,7 +397,7 @@ const styles = {
   },
   timelineDesc: {
     fontSize: '0.9rem',
-    color: 'var(--text-secondary)'
+    color: 'var(--color-text-secondary)'
   },
   chemicalBadge: {
     display: 'inline-block',

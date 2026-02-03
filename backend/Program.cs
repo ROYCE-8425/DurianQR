@@ -33,7 +33,7 @@ builder.Services.AddCors(options =>
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -43,11 +43,11 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
     // Swagger UI at /swagger
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "DurianQR API v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "DurianQR API v1");
         options.RoutePrefix = "swagger";
     });
 }

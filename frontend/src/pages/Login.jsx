@@ -1,148 +1,133 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import '../styles/auth.css';
+import '../styles/shared-header.css';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-    
-    try {
-      const response = await api.post('/auth/login', { username, password });
-      localStorage.setItem('user', JSON.stringify(response.data));
-      navigate('/');
-      window.location.reload();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
-    } finally {
-      setLoading(false);
+    if (!formData.username || !formData.password) {
+      setError('Vui lòng nhập đầy đủ thông tin');
+      return;
     }
+    setLoading(true); setError('');
+    try {
+      const res = await api.post('/auth/login', formData);
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+
+      const role = res.data.user?.Role;
+      if (role === 'Admin') navigate('/admin');
+      else if (role === 'Farmer') navigate('/farmer');
+      else navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Đăng nhập thất bại');
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="auth-container">
-      {/* Floating Decorative Elements */}
-      <div className="floating-elements">
-        <div className="floating-bubble bubble-1"></div>
-        <div className="floating-bubble bubble-2"></div>
-        <div className="floating-bubble bubble-3"></div>
-        <div className="floating-bubble bubble-4"></div>
-        <div className="floating-bubble bubble-5"></div>
-        <div className="floating-bubble bubble-6"></div>
-        
-        <div className="floating-durian durian-1">🍈</div>
-        <div className="floating-durian durian-2">🍈</div>
-        <div className="floating-durian durian-3">🌿</div>
-        <div className="floating-durian durian-4">🌿</div>
-      </div>
+    <div style={styles.container}>
+      {/* Background decorations */}
+      <div style={styles.bgDecor1}>🍈</div>
+      <div style={styles.bgDecor2}>🌳</div>
 
-      {/* Login Card */}
-      <div className="auth-card">
+      <div style={styles.card}>
         {/* Logo Section */}
-        <div className="auth-logo">
-          <span className="auth-logo-icon">🍈</span>
-          <h1 className="auth-title">DurianQR</h1>
-          <p className="auth-subtitle">Truy xuất nguồn gốc sầu riêng</p>
+        <div style={styles.logoSection}>
+          <span style={styles.logoIcon}>🍈</span>
+          <h1 style={styles.title}>DurianQR</h1>
+          <p style={styles.subtitle}>Truy xuất nguồn gốc sầu riêng</p>
         </div>
 
         {/* Error Message */}
-        {error && (
-          <div className="message message-error">
-            ⚠️ {error}
-          </div>
-        )}
+        {error && <div style={styles.error}>{error}</div>}
 
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="auth-form">
-          {/* Username Field */}
-          <div className="form-group">
-            <label className="form-label">Tên đăng nhập</label>
-            <div className="form-input-wrapper">
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Nhập tên đăng nhập..."
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoComplete="username"
-              />
-              <span className="form-icon">👤</span>
-            </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>👤 Tên đăng nhập</label>
+            <input
+              type="text"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              style={styles.input}
+              placeholder="Nhập tên đăng nhập..."
+            />
           </div>
 
-          {/* Password Field */}
-          <div className="form-group">
-            <label className="form-label">Mật khẩu</label>
-            <div className="form-input-wrapper">
-              <input
-                type="password"
-                className="form-input"
-                placeholder="Nhập mật khẩu..."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-              <span className="form-icon">🔒</span>
-            </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>🔒 Mật khẩu</label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              style={styles.input}
+              placeholder="Nhập mật khẩu..."
+            />
           </div>
 
-          {/* Submit Button */}
-          <button 
-            type="submit" 
-            className="btn-primary"
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="btn-loading">
-                <span className="spinner"></span>
-                Đang đăng nhập...
-              </span>
-            ) : (
-              '🚀 Đăng nhập'
-            )}
+          <button type="submit" style={styles.btn} disabled={loading}>
+            {loading ? 'Đang đăng nhập...' : '🔐 Đăng nhập'}
           </button>
         </form>
 
-        {/* Social Login Divider */}
-        <div className="social-divider">
-          <span>hoặc đăng nhập bằng</span>
-        </div>
-
-        {/* Social Buttons */}
-        <div className="social-buttons">
-          <button type="button" className="btn-social" title="Google">
-            🔵
-          </button>
-          <button type="button" className="btn-social" title="Facebook">
-            📘
-          </button>
-          <button type="button" className="btn-social" title="Zalo">
-            💬
-          </button>
-        </div>
-
-        {/* Footer Link */}
-        <div className="auth-footer">
-          <p>
-            Chưa có tài khoản?{' '}
-            <Link to="/register" className="auth-link">
-              Đăng ký ngay
-            </Link>
+        {/* Links */}
+        <div style={styles.links}>
+          <p style={styles.linkText}>
+            Chưa có tài khoản? <Link to="/register" style={styles.link}>Đăng ký ngay</Link>
           </p>
+          <Link to="/" style={styles.backLink}>← Về trang chủ</Link>
         </div>
       </div>
+
+      {/* Footer */}
+      <p style={styles.footer}>© 2026 DurianQR - Hệ thống truy xuất nguồn gốc sầu riêng</p>
     </div>
   );
+};
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
+    padding: '2rem',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  bgDecor1: { position: 'absolute', top: '10%', left: '10%', fontSize: '6rem', opacity: 0.1 },
+  bgDecor2: { position: 'absolute', bottom: '10%', right: '10%', fontSize: '8rem', opacity: 0.1 },
+  card: {
+    background: 'white',
+    borderRadius: '16px',
+    padding: '2.5rem',
+    width: '100%',
+    maxWidth: '400px',
+    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+  },
+  logoSection: { textAlign: 'center', marginBottom: '2rem' },
+  logoIcon: { fontSize: '4rem', display: 'block', marginBottom: '0.5rem' },
+  title: { fontSize: '2rem', fontWeight: 700, color: '#2d5a27', margin: '0 0 0.5rem', fontFamily: "'Playfair Display', serif" },
+  subtitle: { color: '#666', margin: 0 },
+  error: { padding: '0.75rem', background: '#ffebee', border: '1px solid #ffcdd2', borderRadius: '8px', color: '#c62828', marginBottom: '1rem', textAlign: 'center' },
+  form: {},
+  formGroup: { marginBottom: '1.25rem' },
+  label: { display: 'block', marginBottom: '0.5rem', color: '#555', fontWeight: 500 },
+  input: { width: '100%', padding: '0.875rem 1rem', background: '#fafafa', border: '1px solid #e5e5e5', borderRadius: '8px', fontSize: '1rem', boxSizing: 'border-box' },
+  btn: { width: '100%', padding: '1rem', background: '#2d5a27', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', marginTop: '0.5rem' },
+  links: { textAlign: 'center', marginTop: '1.5rem' },
+  linkText: { color: '#666', margin: '0 0 1rem' },
+  link: { color: '#2d5a27', fontWeight: 600, textDecoration: 'none' },
+  backLink: { color: '#888', textDecoration: 'none', fontSize: '0.9rem' },
+  footer: { marginTop: '2rem', color: '#666', fontSize: '0.85rem' },
 };
 
 export default Login;

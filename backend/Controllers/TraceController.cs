@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DurianQR.API.Data;
+using DurianQR.API.Models;
 
 namespace DurianQR.API.Controllers;
 

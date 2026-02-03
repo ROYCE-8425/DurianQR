@@ -1,409 +1,195 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
-import '../styles/global.css';
+import SharedHeader, { SharedFooter } from '../components/SharedHeader';
+import '../styles/shared-header.css';
 
 const HarvestRequestPage = () => {
-  const [trees, setTrees] = useState([]);
-  const [farms, setFarms] = useState([]);
+  const user = JSON.parse(localStorage.getItem('user'));
   const [loading, setLoading] = useState(true);
-  const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [phiResult, setPHIResult] = useState(null);
-  const [myRequests, setMyRequests] = useState([]);
-  
-  const user = JSON.parse(localStorage.getItem('user'));
-  
+  const [trees, setTrees] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [phiInfo, setPhiInfo] = useState(null);
+
   const [formData, setFormData] = useState({
-    treeId: '',
-    expectedHarvestDate: '',
-    estimatedQuantity: ''
+    treeId: '', expectedHarvestDate: '', estimatedQuantity: '', notes: ''
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
-      const [farmsRes, requestsRes] = await Promise.all([
-        api.get('/farms'),
-        api.get(`/harvest-requests/my?userId=${user?.UserID || 0}`)
-      ]);
-      setFarms(farmsRes.data);
-      setMyRequests(requestsRes.data);
-      
-      // Flatten trees from all farms
-      const allTrees = farmsRes.data.flatMap(farm => 
-        (farm.trees || []).map(tree => ({
-          ...tree,
-          farmName: farm.farmName
-        }))
+      const [farmsRes, reqRes] = await Promise.all([api.get('/farms'), api.get('/harvest-requests')]);
+      const allTrees = farmsRes.data.flatMap(farm =>
+        (farm.trees || []).map(tree => ({ ...tree, farmName: farm.farmName }))
       );
       setTrees(allTrees);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
+      setRequests(reqRes.data);
+    } catch (error) { console.error('Error:', error); }
+    finally { setLoading(false); }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear PHI result when tree changes
-    if (name === 'treeId') {
-      setPHIResult(null);
-    }
-  };
-
-  const checkPHI = async () => {
-    if (!formData.treeId) {
-      setMessage({ type: 'error', text: 'Vui lòng chọn cây trước' });
-      return;
-    }
-
-    setChecking(true);
-    setMessage({ type: '', text: '' });
-
+  const checkPHI = async (treeId) => {
+    if (!treeId) { setPhiInfo(null); return; }
     try {
-      const params = formData.expectedHarvestDate 
-        ? `?harvestDate=${formData.expectedHarvestDate}` 
-        : '';
-      const response = await api.get(`/harvest-requests/check-phi/${formData.treeId}${params}`);
-      setPHIResult(response.data);
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Không thể kiểm tra PHI' });
-    } finally {
-      setChecking(false);
-    }
+      const res = await api.get(`/trees/${treeId}/phi-status`);
+      setPhiInfo(res.data);
+    } catch { setPhiInfo({ isSafe: true, daysRemaining: 0 }); }
+  };
+
+  const handleTreeChange = (treeId) => {
+    setFormData({ ...formData, treeId });
+    checkPHI(treeId);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.treeId || !formData.expectedHarvestDate || !formData.estimatedQuantity) {
-      setMessage({ type: 'error', text: 'Vui lòng điền đầy đủ thông tin' });
-      return;
+    if (!formData.treeId || !formData.expectedHarvestDate) {
+      setMessage({ type: 'error', text: 'Vui lòng điền đủ thông tin' }); return;
     }
-
-    setSubmitting(true);
-    setMessage({ type: '', text: '' });
-
+    if (phiInfo && !phiInfo.isSafe) {
+      setMessage({ type: 'error', text: `⚠️ Còn ${phiInfo.daysRemaining} ngày cách ly` }); return;
+    }
+    setSubmitting(true); setMessage({ type: '', text: '' });
     try {
-      const response = await api.post('/harvest-requests', {
-        treeId: parseInt(formData.treeId),
-        userId: user.UserID,
+      await api.post('/harvest-requests', {
+        treeId: parseInt(formData.treeId), userId: user?.UserID,
         expectedHarvestDate: formData.expectedHarvestDate,
-        estimatedQuantity: parseFloat(formData.estimatedQuantity)
+        estimatedQuantity: parseFloat(formData.estimatedQuantity) || 0,
+        notes: formData.notes, status: 'Pending'
       });
-
-      if (response.data.success) {
-        setMessage({ type: 'success', text: response.data.message });
-        setFormData({ treeId: '', expectedHarvestDate: '', estimatedQuantity: '' });
-        setPHIResult(null);
-        fetchData(); // Refresh requests list
-      }
-    } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Không thể tạo yêu cầu' 
-      });
-    } finally {
-      setSubmitting(false);
-    }
+      setMessage({ type: 'success', text: '✅ Đã gửi yêu cầu thành công!' });
+      setFormData({ treeId: '', expectedHarvestDate: '', estimatedQuantity: '', notes: '' });
+      setPhiInfo(null); fetchData();
+    } catch (error) { setMessage({ type: 'error', text: error.response?.data?.message || 'Lỗi' }); }
+    finally { setSubmitting(false); }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN');
-  };
-
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('vi-VN') : 'N/A';
   const getStatusBadge = (status) => {
-    const statusMap = {
-      'Pending': { class: 'badge-warning', text: '⏳ Chờ duyệt' },
-      'Approved': { class: 'badge-success', text: '✅ Đã duyệt' },
-      'Rejected': { class: 'badge-danger', text: '❌ Từ chối' },
-      'CheckedIn': { class: 'badge-info', text: '📦 Đã nhập kho' },
-      'Completed': { class: 'badge-success', text: '✅ Hoàn thành' },
-      'Cancelled': { class: 'badge-danger', text: '🚫 Đã hủy' }
+    const styles = {
+      Pending: { background: '#fff3e0', color: '#e65100' },
+      Approved: { background: '#e8f5e9', color: '#2e7d32' },
+      Completed: { background: '#e3f2fd', color: '#1565c0' },
+      Rejected: { background: '#ffebee', color: '#c62828' },
     };
-    return statusMap[status] || { class: '', text: status };
+    return styles[status] || styles.Pending;
   };
-
-  if (!user) {
-    return (
-      <div className="page-container">
-        <div className="empty-state">
-          <div className="icon">🔐</div>
-          <h3>Vui lòng đăng nhập</h3>
-          <p>Bạn cần đăng nhập để tạo yêu cầu thu hoạch</p>
-          <Link to="/login" className="btn btn-primary">Đăng nhập</Link>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="loading-container">
-          <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)' }}>Đang tải...</p>
-        </div>
+      <div className="shared-page-layout">
+        <SharedHeader title="Yêu cầu thu hoạch" subtitle="Đang tải..." bannerIcon="🌳" navType="farmer" />
+        <div style={st.loading}><p>Đang tải...</p></div>
+        <SharedFooter />
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      {/* Header */}
-      <div className="page-header">
-        <span className="page-icon">🌳</span>
-        <h1 className="page-title">Yêu cầu Thu hoạch</h1>
-        <p className="page-subtitle">Tạo phiếu xin cắt sầu riêng - Hệ thống sẽ tự động kiểm tra PHI</p>
-      </div>
+    <div className="shared-page-layout">
+      <SharedHeader title="Yêu cầu thu hoạch" subtitle="Đăng ký thu hoạch và kiểm tra thời gian cách ly" bannerIcon="🌳" navType="farmer" />
+      <div className="shared-page-body">
+        <aside style={st.sidebar}>
+          <h3 style={st.sidebarTitle}>📋 MENU</h3>
+          <Link to="/farmer" style={st.link}>🏠 Trang chủ</Link>
+          <Link to="/farming-log" style={st.link}>📝 Nhật ký</Link>
+          <Link to="/harvest-request" style={{ ...st.link, background: '#e8f5e9', color: '#2d5a27' }}>🌳 Thu hoạch</Link>
+        </aside>
+        <main className="shared-page-main">
+          {message.text && <div style={message.type === 'success' ? st.success : st.error}>{message.text}</div>}
 
-      {/* Quick Actions */}
-      <div className="quick-actions">
-        <Link to="/" className="quick-action-btn">
-          <span className="icon">🏠</span>
-          <span>Dashboard</span>
-        </Link>
-        <Link to="/trace" className="quick-action-btn">
-          <span className="icon">🔍</span>
-          <span>Truy xuất</span>
-        </Link>
-      </div>
-
-      {/* Message */}
-      {message.text && (
-        <div style={{ 
-          maxWidth: 600, 
-          margin: '0 auto 1.5rem',
-          padding: '1rem 1.5rem',
-          borderRadius: '12px',
-          background: message.type === 'success' 
-            ? 'rgba(76, 175, 80, 0.15)' 
-            : 'rgba(244, 67, 54, 0.15)',
-          border: `1px solid ${message.type === 'success' ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)'}`,
-          color: message.type === 'success' ? '#81C784' : '#EF5350',
-          textAlign: 'center'
-        }}>
-          {message.text}
-        </div>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', maxWidth: 1200, margin: '0 auto' }}>
-        {/* Form */}
-        <div className="glass-card">
-          <div className="card-header">
-            <h3 className="card-title">
-              <span className="icon">📝</span>
-              Tạo yêu cầu mới
-            </h3>
-          </div>
-
-          <form onSubmit={handleSubmit} style={{ padding: '1rem 0' }}>
-            {/* Select Tree */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={styles.label}>Chọn cây sầu riêng</label>
-              <select 
-                name="treeId"
-                value={formData.treeId}
-                onChange={handleChange}
-                style={styles.select}
-              >
-                <option value="">-- Chọn cây --</option>
-                {trees.map(tree => (
-                  <option key={tree.treeID} value={tree.treeID}>
-                    {tree.treeCode} - {tree.variety || 'N/A'} ({tree.farmName})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Check PHI Button */}
-            {formData.treeId && (
-              <div style={{ marginBottom: '1.5rem' }}>
-                <button 
-                  type="button"
-                  onClick={checkPHI}
-                  className="btn btn-secondary"
-                  disabled={checking}
-                  style={{ width: '100%' }}
-                >
-                  {checking ? '🔄 Đang kiểm tra...' : '🔍 Kiểm tra PHI (thời gian cách ly)'}
-                </button>
-              </div>
-            )}
-
-            {/* PHI Result */}
-            {phiResult && (
-              <div style={{
-                ...styles.phiResult,
-                borderColor: phiResult.canHarvest ? 'rgba(76,175,80,0.5)' : 'rgba(244,67,54,0.5)',
-                background: phiResult.canHarvest ? 'rgba(76,175,80,0.1)' : 'rgba(244,67,54,0.1)'
-              }}>
-                <div style={{ 
-                  fontWeight: 700, 
-                  fontSize: '1.1rem',
-                  color: phiResult.canHarvest ? '#81C784' : '#EF5350',
-                  marginBottom: '0.5rem'
-                }}>
-                  {phiResult.message}
+          <section style={st.section}>
+            <h2 style={st.sectionTitle}>📋 Tạo yêu cầu thu hoạch</h2>
+            <div style={st.card}>
+              <form onSubmit={handleSubmit}>
+                <div style={st.row}>
+                  <div style={st.formGroup}>
+                    <label style={st.label}>Chọn cây *</label>
+                    <select value={formData.treeId} onChange={(e) => handleTreeChange(e.target.value)} style={st.input} required>
+                      <option value="">-- Chọn --</option>
+                      {trees.map(t => <option key={t.treeID} value={t.treeID}>{t.treeCode} - {t.variety}</option>)}
+                    </select>
+                  </div>
+                  <div style={st.formGroup}>
+                    <label style={st.label}>Ngày thu hoạch dự kiến *</label>
+                    <input type="date" value={formData.expectedHarvestDate} onChange={(e) => setFormData({ ...formData, expectedHarvestDate: e.target.value })} style={st.input} required />
+                  </div>
+                  <div style={st.formGroup}>
+                    <label style={st.label}>Sản lượng ước tính (kg)</label>
+                    <input type="number" value={formData.estimatedQuantity} onChange={(e) => setFormData({ ...formData, estimatedQuantity: e.target.value })} style={st.input} placeholder="VD: 100" />
+                  </div>
                 </div>
-                {phiResult.lastSpray && (
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    <div>📅 Lần phun cuối: {formatDate(phiResult.lastSpray.date)}</div>
-                    <div>💊 Thuốc: {phiResult.lastSpray.chemical}</div>
-                    <div>⏱️ PHI: {phiResult.lastSpray.phiDays} ngày</div>
+
+                {phiInfo && (
+                  <div style={phiInfo.isSafe ? st.phiSafe : st.phiWarning}>
+                    {phiInfo.isSafe ? '✅ An toàn - Đã qua thời gian cách ly' : `⚠️ Chưa đủ thời gian cách ly. Còn ${phiInfo.daysRemaining} ngày.`}
                   </div>
                 )}
-                {phiResult.daysRemaining > 0 && (
-                  <div style={{ marginTop: '0.5rem', color: '#FFD54F' }}>
-                    ⏳ Còn {phiResult.daysRemaining} ngày nữa
+
+                <div style={st.formGroup}>
+                  <label style={st.label}>Ghi chú</label>
+                  <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} style={{ ...st.input, minHeight: '80px' }} placeholder="Ghi chú thêm..." />
+                </div>
+                <button type="submit" style={st.btn} disabled={submitting || (phiInfo && !phiInfo.isSafe)}>
+                  {submitting ? 'Đang gửi...' : '📤 Gửi yêu cầu'}
+                </button>
+              </form>
+            </div>
+          </section>
+
+          <section style={st.section}>
+            <h2 style={st.sectionTitle}>📋 Danh sách yêu cầu</h2>
+            {requests.length === 0 ? (
+              <div style={st.empty}><span style={{ fontSize: '3rem' }}>🌳</span><h3>Chưa có yêu cầu</h3></div>
+            ) : (
+              <div style={st.list}>
+                {requests.map((req, i) => (
+                  <div key={i} style={st.reqCard}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ color: '#2d5a27' }}>{req.requestCode || `REQ-${i + 1}`}</strong>
+                      <span style={{ ...st.badge, ...getStatusBadge(req.status) }}>{req.status}</span>
+                    </div>
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: '#555' }}>
+                      <div>🌳 Cây: {req.tree?.treeCode || 'N/A'}</div>
+                      <div>📅 Ngày: {formatDate(req.expectedHarvestDate)}</div>
+                      <div>⚖️ Ước tính: {req.estimatedQuantity || 0} kg</div>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             )}
-
-            {/* Expected Harvest Date */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={styles.label}>Ngày dự kiến cắt</label>
-              <input 
-                type="date"
-                name="expectedHarvestDate"
-                value={formData.expectedHarvestDate}
-                onChange={handleChange}
-                style={styles.input}
-                min={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-
-            {/* Estimated Quantity */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={styles.label}>Số lượng ước tính (kg)</label>
-              <input 
-                type="number"
-                name="estimatedQuantity"
-                value={formData.estimatedQuantity}
-                onChange={handleChange}
-                placeholder="VD: 500"
-                style={styles.input}
-                min="0"
-                step="0.1"
-              />
-            </div>
-
-            {/* Submit */}
-            <button 
-              type="submit"
-              className="btn btn-primary btn-block"
-              disabled={submitting || (phiResult && !phiResult.canHarvest)}
-              style={{ marginTop: '1rem' }}
-            >
-              {submitting ? '⏳ Đang gửi...' : '📨 Gửi yêu cầu'}
-            </button>
-          </form>
-        </div>
-
-        {/* My Requests */}
-        <div className="glass-card">
-          <div className="card-header">
-            <h3 className="card-title">
-              <span className="icon">📋</span>
-              Yêu cầu của tôi
-            </h3>
-          </div>
-
-          {myRequests.length === 0 ? (
-            <div className="empty-state" style={{ padding: '2rem 1rem' }}>
-              <div className="icon">📭</div>
-              <h3>Chưa có yêu cầu</h3>
-              <p>Tạo yêu cầu đầu tiên ở bên trái</p>
-            </div>
-          ) : (
-            <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
-              {myRequests.map((request, index) => {
-                const status = getStatusBadge(request.status);
-                return (
-                  <div 
-                    key={request.requestID} 
-                    style={styles.requestItem}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <strong style={{ color: '#81C784' }}>{request.requestCode}</strong>
-                      <span className={`card-badge ${status.class}`}>{status.text}</span>
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      <div>🌳 Cây: {request.tree?.treeCode}</div>
-                      <div>📅 Ngày cắt: {formatDate(request.expectedHarvestDate)}</div>
-                      <div>⚖️ Ước tính: {request.estimatedQuantity} kg</div>
-                    </div>
-                    {request.approvalNote && (
-                      <div style={{ 
-                        marginTop: '0.5rem', 
-                        fontSize: '0.8rem', 
-                        color: request.status === 'Approved' ? '#81C784' : '#EF5350',
-                        fontStyle: 'italic'
-                      }}>
-                        💬 {request.approvalNote}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          </section>
+        </main>
       </div>
+      <SharedFooter />
     </div>
   );
 };
 
-const styles = {
-  label: {
-    display: 'block',
-    marginBottom: '0.5rem',
-    color: 'var(--text-secondary)',
-    fontSize: '0.9rem'
-  },
-  input: {
-    width: '100%',
-    padding: '0.75rem 1rem',
-    background: 'rgba(255, 255, 255, 0.08)',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
-    borderRadius: '10px',
-    color: 'white',
-    fontSize: '1rem',
-    outline: 'none',
-    boxSizing: 'border-box'
-  },
-  select: {
-    width: '100%',
-    padding: '0.75rem 1rem',
-    background: 'rgba(255, 255, 255, 0.08)',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
-    borderRadius: '10px',
-    color: 'white',
-    fontSize: '1rem',
-    outline: 'none',
-    boxSizing: 'border-box'
-  },
-  phiResult: {
-    padding: '1rem',
-    borderRadius: '12px',
-    border: '1px solid',
-    marginBottom: '1.5rem'
-  },
-  requestItem: {
-    padding: '1rem',
-    borderBottom: '1px solid rgba(255,255,255,0.1)',
-    transition: 'background 0.3s ease'
-  }
+const st = {
+  sidebar: { width: '220px', background: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px', padding: '1rem', height: 'fit-content' },
+  sidebarTitle: { fontSize: '0.75rem', fontWeight: 700, color: '#888', marginBottom: '1rem' },
+  link: { display: 'block', padding: '0.75rem', color: '#555', textDecoration: 'none', borderRadius: '4px', marginBottom: '0.25rem' },
+  success: { padding: '1rem', background: '#e8f5e9', border: '1px solid #c8e6c9', borderRadius: '8px', color: '#2e7d32', marginBottom: '1rem' },
+  error: { padding: '1rem', background: '#ffebee', border: '1px solid #ffcdd2', borderRadius: '8px', color: '#c62828', marginBottom: '1rem' },
+  section: { marginBottom: '2rem' },
+  sectionTitle: { fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid #e5e5e5' },
+  card: { background: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px', padding: '1.5rem' },
+  row: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' },
+  formGroup: { marginBottom: '1rem' },
+  label: { display: 'block', marginBottom: '0.5rem', color: '#555', fontSize: '0.875rem', fontWeight: 500 },
+  input: { width: '100%', padding: '0.75rem', background: '#fafafa', border: '1px solid #e5e5e5', borderRadius: '4px', boxSizing: 'border-box' },
+  phiSafe: { padding: '1rem', background: '#e8f5e9', border: '1px solid #c8e6c9', borderRadius: '8px', color: '#2e7d32', marginBottom: '1rem' },
+  phiWarning: { padding: '1rem', background: '#fff3e0', border: '1px solid #ffcc80', borderRadius: '8px', color: '#e65100', marginBottom: '1rem' },
+  btn: { width: '100%', padding: '0.875rem', background: '#2d5a27', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: 'pointer' },
+  list: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' },
+  reqCard: { padding: '1rem', background: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px' },
+  badge: { padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 },
+  empty: { textAlign: 'center', padding: '3rem', background: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px', color: '#888' },
+  loading: { display: 'flex', justifyContent: 'center', padding: '3rem', flex: 1 },
 };
 
 export default HarvestRequestPage;

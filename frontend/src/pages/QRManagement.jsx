@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
-import '../styles/global.css';
+import SharedHeader, { SharedFooter } from '../components/SharedHeader';
+import '../styles/shared-header.css';
 
 const API_URL = 'http://localhost:5162';
 
@@ -11,8 +12,7 @@ const QRManagement = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [selectedQR, setSelectedQR] = useState(null); // Modal state
-  const [previewBatch, setPreviewBatch] = useState(null); // Preview before generate
+  const [selectedQR, setSelectedQR] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -36,19 +36,15 @@ const QRManagement = () => {
   const generateQR = async (batchId) => {
     setGenerating(batchId);
     setMessage({ type: '', text: '' });
-    
+
     try {
-      const response = await api.post(`/qr/generate/${batchId}`);
-      setMessage({ 
-        type: 'success', 
-        text: `✅ Đã tạo QR code thành công!` 
-      });
-      setPreviewBatch(null);
+      await api.post(`/qr/generate/${batchId}`);
+      setMessage({ type: 'success', text: '✅ Đã tạo QR code thành công!' });
       fetchData();
     } catch (err) {
-      setMessage({ 
-        type: 'error', 
-        text: err.response?.data?.message || 'Không thể tạo QR code' 
+      setMessage({
+        type: 'error',
+        text: err.response?.data?.message || 'Không thể tạo QR code'
       });
     } finally {
       setGenerating(null);
@@ -75,288 +71,207 @@ const QRManagement = () => {
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="loading-container">
-          <div className="spinner-lg"></div>
-          <p style={{ color: 'var(--text-secondary)' }}>Đang tải...</p>
+      <div className="shared-page-layout">
+        <SharedHeader
+          title="Quản lý QR Code"
+          subtitle="Đang tải dữ liệu..."
+          bannerIcon="🔲"
+          navType="public"
+        />
+        <div style={styles.loadingContainer}>
+          <div style={styles.spinner}></div>
+          <p>Đang tải...</p>
         </div>
+        <SharedFooter />
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      {/* Header */}
-      <div className="page-header">
-        <span className="page-icon">🔲</span>
-        <h1 className="page-title">Quản lý QR Code</h1>
-        <p className="page-subtitle">Tạo và quản lý mã QR cho các lô sầu riêng</p>
-      </div>
+    <div className="shared-page-layout">
+      <SharedHeader
+        title="Quản lý QR Code"
+        subtitle="Tạo và quản lý mã QR cho các lô sầu riêng"
+        bannerIcon="🔲"
+        navType="public"
+      />
 
-      {/* Quick Actions */}
-      <div className="quick-actions">
-        <Link to="/" className="quick-action-btn">
-          <span className="icon">🏠</span>
-          <span>Dashboard</span>
-        </Link>
-        <Link to="/trace" className="quick-action-btn">
-          <span className="icon">🔍</span>
-          <span>Truy xuất</span>
-        </Link>
-      </div>
-
-      {/* Message */}
-      {message.text && (
-        <div style={{ 
-          maxWidth: 800, 
-          margin: '0 auto 1.5rem',
-          padding: '1rem 1.5rem',
-          borderRadius: '12px',
-          background: message.type === 'success' 
-            ? 'rgba(76, 175, 80, 0.15)' 
-            : 'rgba(244, 67, 54, 0.15)',
-          border: `1px solid ${message.type === 'success' ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)'}`,
-          color: message.type === 'success' ? '#81C784' : '#EF5350',
-          textAlign: 'center'
-        }}>
-          {message.text}
-        </div>
-      )}
-
-      {/* Stats */}
-      <div className="stats-grid" style={{ maxWidth: 600 }}>
-        <div className="stat-card">
-          <div className="stat-icon">📦</div>
-          <div className="stat-value">{batchesWithoutQR.length}</div>
-          <div className="stat-label">Chờ tạo QR</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">✅</div>
-          <div className="stat-value">{qrCodes.length}</div>
-          <div className="stat-label">QR đã tạo</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">👁️</div>
-          <div className="stat-value">
-            {qrCodes.reduce((sum, qr) => sum + (qr.scanCount || 0), 0)}
+      <div className="shared-page-body">
+        <main className="shared-page-main">
+          {/* Quick Actions */}
+          <div style={styles.quickActions}>
+            <Link to="/" style={styles.actionCard}>
+              <span style={styles.actionIcon}>🏠</span>
+              <span>Dashboard</span>
+            </Link>
+            <Link to="/trace" style={styles.actionCard}>
+              <span style={styles.actionIcon}>🔍</span>
+              <span>Truy xuất</span>
+            </Link>
           </div>
-          <div className="stat-label">Tổng lượt quét</div>
-        </div>
-      </div>
 
-      {/* Batches without QR */}
-      <div className="section">
-        <div className="section-header">
-          <h2 className="section-title">
-            <span>📦</span> Lô hàng chưa có QR
-          </h2>
-        </div>
-        
-        {batchesWithoutQR.length === 0 ? (
-          <div className="empty-state">
-            <div className="icon">✅</div>
-            <h3>Tất cả đã có QR</h3>
-            <p>Tất cả lô hàng đều đã được tạo QR code</p>
+          {/* Message */}
+          {message.text && (
+            <div style={message.type === 'success' ? styles.successMsg : styles.errorMsg}>
+              {message.text}
+            </div>
+          )}
+
+          {/* Stats */}
+          <div style={styles.statsGrid}>
+            <div style={styles.statCard}>
+              <span style={styles.statIcon}>📦</span>
+              <span style={styles.statValue}>{batchesWithoutQR.length}</span>
+              <span style={styles.statLabel}>Chờ tạo QR</span>
+            </div>
+            <div style={styles.statCard}>
+              <span style={styles.statIcon}>✅</span>
+              <span style={styles.statValue}>{qrCodes.length}</span>
+              <span style={styles.statLabel}>QR đã tạo</span>
+            </div>
+            <div style={styles.statCard}>
+              <span style={styles.statIcon}>👁️</span>
+              <span style={styles.statValue}>
+                {qrCodes.reduce((sum, qr) => sum + (qr.scanCount || 0), 0)}
+              </span>
+              <span style={styles.statLabel}>Tổng lượt quét</span>
+            </div>
           </div>
-        ) : (
-          <div className="content-grid">
-            {batchesWithoutQR.map((batch, index) => (
-              <div 
-                key={batch.batchID} 
-                className="glass-card"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="card-header">
-                  <h3 className="card-title">
-                    <span className="icon">📦</span>
-                    {batch.batchCode}
-                  </h3>
-                  <span className={`card-badge ${batch.isSafe ? 'badge-success' : 'badge-warning'}`}>
-                    {batch.isSafe ? '✅ An toàn' : '⏳ Chờ PHI'}
-                  </span>
-                </div>
-                <div className="card-body">
-                  <div className="card-row">
-                    <span className="card-row-label">Trạng thái</span>
-                    <span className="card-row-value">{batch.status}</span>
-                  </div>
-                  <div className="card-row">
-                    <span className="card-row-label">Thu hoạch</span>
-                    <span className="card-row-value">{formatDate(batch.actualHarvest)}</span>
-                  </div>
-                </div>
-                <div className="card-footer">
-                  <button
-                    className="btn btn-primary btn-block"
-                    onClick={() => generateQR(batch.batchID)}
-                    disabled={generating === batch.batchID || !batch.isSafe}
-                    style={{ opacity: !batch.isSafe ? 0.5 : 1 }}
-                  >
-                    {generating === batch.batchID ? (
-                      <>
-                        <span className="spinner-lg" style={{ 
-                          width: 18, height: 18, borderWidth: 2, marginRight: 8 
-                        }}></span>
-                        Đang tạo...
-                      </>
-                    ) : (
-                      '🔲 Tạo QR Code'
-                    )}
-                  </button>
-                  {!batch.isSafe && (
-                    <p style={{ 
-                      fontSize: '0.8rem', 
-                      color: 'var(--text-muted)', 
-                      marginTop: '0.5rem', 
-                      textAlign: 'center' 
-                    }}>
-                      ⚠️ Chưa qua thời gian cách ly
-                    </p>
-                  )}
-                </div>
+
+          {/* Batches without QR */}
+          <section style={styles.section}>
+            <h2 style={styles.sectionTitle}>📦 Lô hàng chưa có QR</h2>
+
+            {batchesWithoutQR.length === 0 ? (
+              <div style={styles.emptyState}>
+                <span style={styles.emptyIcon}>✅</span>
+                <h3>Tất cả đã có QR</h3>
+                <p>Tất cả lô hàng đều đã được tạo QR code</p>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Existing QR Codes */}
-      <div className="section">
-        <div className="section-header">
-          <h2 className="section-title">
-            <span>✅</span> QR Code đã tạo
-          </h2>
-        </div>
-        
-        {qrCodes.length === 0 ? (
-          <div className="empty-state">
-            <div className="icon">🔲</div>
-            <h3>Chưa có QR code</h3>
-            <p>Tạo QR code cho lô hàng ở phần trên</p>
-          </div>
-        ) : (
-          <div className="content-grid">
-            {qrCodes.map((qr, index) => (
-              <div 
-                key={qr.qrid} 
-                className="glass-card"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="card-header">
-                  <h3 className="card-title">
-                    <span className="icon">🔲</span>
-                    {qr.batch?.batchCode || 'N/A'}
-                  </h3>
-                  <span className="card-badge badge-info">
-                    👁️ {qr.scanCount} quét
-                  </span>
-                </div>
-                
-                {/* QR Image */}
-                <div style={{ 
-                  textAlign: 'center', 
-                  margin: '1rem 0',
-                  padding: '1.5rem',
-                  background: 'white',
-                  borderRadius: '16px'
-                }}>
-                  <img 
-                    src={`${API_URL}${qr.qrImagePath}`}
-                    alt="QR Code"
-                    style={{ maxWidth: '160px', height: 'auto', cursor: 'pointer' }}
-                    onClick={() => setSelectedQR(qr)}
-                    onError={(e) => e.target.style.display = 'none'}
-                  />
-                </div>
-
-                <div className="card-body">
-                  <div className="card-row">
-                    <span className="card-row-label">Tạo lúc</span>
-                    <span className="card-row-value">{formatDate(qr.generatedAt)}</span>
+            ) : (
+              <div style={styles.cardsGrid}>
+                {batchesWithoutQR.map((batch) => (
+                  <div key={batch.batchID} style={styles.card}>
+                    <div style={styles.cardHeader}>
+                      <h3 style={styles.cardTitle}>📦 {batch.batchCode}</h3>
+                      <span style={batch.isSafe ? styles.badgeSuccess : styles.badgeWarning}>
+                        {batch.isSafe ? '✅ An toàn' : '⏳ Chờ PHI'}
+                      </span>
+                    </div>
+                    <div style={styles.cardBody}>
+                      <div style={styles.cardRow}>
+                        <span>Trạng thái</span>
+                        <span>{batch.status}</span>
+                      </div>
+                      <div style={styles.cardRow}>
+                        <span>Thu hoạch</span>
+                        <span>{formatDate(batch.actualHarvest)}</span>
+                      </div>
+                    </div>
+                    <div style={styles.cardFooter}>
+                      <button
+                        style={batch.isSafe ? styles.btnPrimary : styles.btnDisabled}
+                        onClick={() => generateQR(batch.batchID)}
+                        disabled={generating === batch.batchID || !batch.isSafe}
+                      >
+                        {generating === batch.batchID ? 'Đang tạo...' : '🔲 Tạo QR Code'}
+                      </button>
+                      {!batch.isSafe && (
+                        <p style={styles.warningText}>⚠️ Chưa qua thời gian cách ly</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-
-                <div className="card-footer">
-                  <div className="btn-group">
-                    <Link 
-                      to={`/trace/${qr.batch?.batchCode}`}
-                      className="btn btn-outline btn-sm"
-                      style={{ flex: 1, textAlign: 'center' }}
-                    >
-                      👁️ Xem
-                    </Link>
-                    <button
-                      onClick={() => setSelectedQR(qr)}
-                      className="btn btn-secondary btn-sm"
-                      style={{ flex: 1 }}
-                    >
-                      🔍 Phóng to
-                    </button>
-                    <button
-                      onClick={() => downloadQR(qr.batch?.batchCode, qr.qrImagePath)}
-                      className="btn btn-primary btn-sm"
-                      style={{ flex: 1 }}
-                    >
-                      ⬇️ Tải về
-                    </button>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            )}
+          </section>
+
+          {/* Existing QR Codes */}
+          <section style={styles.section}>
+            <h2 style={styles.sectionTitle}>✅ QR Code đã tạo</h2>
+
+            {qrCodes.length === 0 ? (
+              <div style={styles.emptyState}>
+                <span style={styles.emptyIcon}>🔲</span>
+                <h3>Chưa có QR code</h3>
+                <p>Tạo QR code cho lô hàng ở phần trên</p>
+              </div>
+            ) : (
+              <div style={styles.cardsGrid}>
+                {qrCodes.map((qr) => (
+                  <div key={qr.qrid} style={styles.card}>
+                    <div style={styles.cardHeader}>
+                      <h3 style={styles.cardTitle}>🔲 {qr.batch?.batchCode || 'N/A'}</h3>
+                      <span style={styles.badgeInfo}>👁️ {qr.scanCount} quét</span>
+                    </div>
+
+                    {/* QR Image */}
+                    <div style={styles.qrImageContainer}>
+                      <img
+                        src={`${API_URL}${qr.qrImagePath}`}
+                        alt="QR Code"
+                        style={styles.qrImage}
+                        onClick={() => setSelectedQR(qr)}
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
+                    </div>
+
+                    <div style={styles.cardBody}>
+                      <div style={styles.cardRow}>
+                        <span>Tạo lúc</span>
+                        <span>{formatDate(qr.generatedAt)}</span>
+                      </div>
+                    </div>
+
+                    <div style={styles.cardFooter}>
+                      <Link
+                        to={`/trace/${qr.batch?.batchCode}`}
+                        style={styles.btnOutline}
+                      >
+                        👁️ Xem
+                      </Link>
+                      <button
+                        onClick={() => setSelectedQR(qr)}
+                        style={styles.btnSecondary}
+                      >
+                        🔍 Phóng to
+                      </button>
+                      <button
+                        onClick={() => downloadQR(qr.batch?.batchCode, qr.qrImagePath)}
+                        style={styles.btnPrimary}
+                      >
+                        ⬇️ Tải về
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
       </div>
 
       {/* QR Modal */}
       {selectedQR && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.85)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            backdropFilter: 'blur(10px)'
-          }}
-          onClick={() => setSelectedQR(null)}
-        >
-          <div 
-            style={{
-              background: 'white',
-              padding: '2rem',
-              borderRadius: '24px',
-              textAlign: 'center',
-              maxWidth: '90%',
-              animation: 'fadeIn 0.3s ease'
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <h3 style={{ marginBottom: '1rem', color: '#1B5E20' }}>
-              🔲 {selectedQR.batch?.batchCode}
-            </h3>
-            <img 
+        <div style={styles.modal} onClick={() => setSelectedQR(null)}>
+          <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>🔲 {selectedQR.batch?.batchCode}</h3>
+            <img
               src={`${API_URL}${selectedQR.qrImagePath}`}
               alt="QR Code"
-              style={{ maxWidth: '300px', width: '100%' }}
+              style={styles.modalImage}
             />
-            <p style={{ marginTop: '1rem', color: '#666', fontSize: '0.9rem' }}>
-              Quét để truy xuất nguồn gốc sầu riêng
-            </p>
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button 
+            <p style={styles.modalDesc}>Quét để truy xuất nguồn gốc sầu riêng</p>
+            <div style={styles.modalButtons}>
+              <button
                 onClick={() => downloadQR(selectedQR.batch?.batchCode, selectedQR.qrImagePath)}
-                className="btn btn-primary"
+                style={styles.btnPrimary}
               >
                 ⬇️ Tải về
               </button>
-              <button 
+              <button
                 onClick={() => setSelectedQR(null)}
-                className="btn btn-outline"
+                style={styles.btnOutline}
               >
                 ✕ Đóng
               </button>
@@ -364,8 +279,267 @@ const QRManagement = () => {
           </div>
         </div>
       )}
+
+      <SharedFooter />
     </div>
   );
+};
+
+const styles = {
+  quickActions: {
+    display: 'flex',
+    gap: '1rem',
+    marginBottom: '2rem',
+  },
+  actionCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.75rem 1.5rem',
+    background: '#ffffff',
+    border: '1px solid #e5e5e5',
+    borderRadius: '8px',
+    textDecoration: 'none',
+    color: '#1a1a1a',
+    fontWeight: 600,
+    fontSize: '0.875rem',
+  },
+  actionIcon: { fontSize: '1.25rem' },
+  successMsg: {
+    padding: '1rem',
+    background: '#e8f5e9',
+    border: '1px solid #c8e6c9',
+    borderRadius: '8px',
+    color: '#2e7d32',
+    textAlign: 'center',
+    marginBottom: '1.5rem',
+  },
+  errorMsg: {
+    padding: '1rem',
+    background: '#ffebee',
+    border: '1px solid #ffcdd2',
+    borderRadius: '8px',
+    color: '#c62828',
+    textAlign: 'center',
+    marginBottom: '1.5rem',
+  },
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '1.5rem',
+    marginBottom: '2rem',
+  },
+  statCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '1.5rem',
+    background: '#ffffff',
+    border: '1px solid #e5e5e5',
+    borderRadius: '8px',
+    textAlign: 'center',
+  },
+  statIcon: { fontSize: '2rem' },
+  statValue: { fontSize: '2rem', fontWeight: 700, color: '#1a1a1a' },
+  statLabel: { fontSize: '0.75rem', fontWeight: 600, color: '#888', textTransform: 'uppercase' },
+  section: { marginBottom: '2rem' },
+  sectionTitle: {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    color: '#1a1a1a',
+    marginBottom: '1rem',
+    paddingBottom: '0.75rem',
+    borderBottom: '1px solid #e5e5e5',
+  },
+  cardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '1.5rem',
+  },
+  card: {
+    background: '#ffffff',
+    border: '1px solid #e5e5e5',
+    borderRadius: '8px',
+    overflow: 'hidden',
+  },
+  cardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1rem 1.25rem',
+    borderBottom: '1px solid #f0f0f0',
+  },
+  cardTitle: { fontSize: '1rem', fontWeight: 600, color: '#1a1a1a', margin: 0 },
+  cardBody: { padding: '1rem 1.25rem' },
+  cardRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '0.5rem 0',
+    fontSize: '0.9rem',
+    color: '#555',
+  },
+  cardFooter: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    padding: '1rem 1.25rem',
+    borderTop: '1px solid #f0f0f0',
+  },
+  qrImageContainer: {
+    textAlign: 'center',
+    padding: '1.5rem',
+    background: '#fafafa',
+  },
+  qrImage: {
+    maxWidth: '160px',
+    height: 'auto',
+    cursor: 'pointer',
+    borderRadius: '8px',
+  },
+  btnPrimary: {
+    padding: '0.5rem 1rem',
+    background: '#2d5a27',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    textDecoration: 'none',
+    textAlign: 'center',
+  },
+  btnOutline: {
+    padding: '0.5rem 1rem',
+    background: 'transparent',
+    color: '#2d5a27',
+    border: '1px solid #2d5a27',
+    borderRadius: '4px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    textDecoration: 'none',
+    textAlign: 'center',
+  },
+  btnSecondary: {
+    padding: '0.5rem 1rem',
+    background: '#fafafa',
+    color: '#555',
+    border: '1px solid #e5e5e5',
+    borderRadius: '4px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  btnDisabled: {
+    padding: '0.5rem 1rem',
+    background: '#e5e5e5',
+    color: '#888',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    cursor: 'not-allowed',
+  },
+  badgeSuccess: {
+    padding: '0.25rem 0.75rem',
+    background: '#e8f5e9',
+    color: '#2e7d32',
+    borderRadius: '4px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+  },
+  badgeWarning: {
+    padding: '0.25rem 0.75rem',
+    background: '#fff3e0',
+    color: '#e65100',
+    borderRadius: '4px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+  },
+  badgeInfo: {
+    padding: '0.25rem 0.75rem',
+    background: '#e3f2fd',
+    color: '#1565c0',
+    borderRadius: '4px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+  },
+  warningText: {
+    fontSize: '0.8rem',
+    color: '#888',
+    textAlign: 'center',
+    margin: 0,
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '3rem',
+    background: '#ffffff',
+    border: '1px solid #e5e5e5',
+    borderRadius: '8px',
+    color: '#888',
+  },
+  emptyIcon: { fontSize: '3rem', display: 'block', marginBottom: '1rem' },
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    padding: '3rem',
+    color: '#888',
+  },
+  spinner: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid #e5e5e5',
+    borderTop: '3px solid #2d5a27',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+    marginBottom: '1rem',
+  },
+  modal: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  modalContent: {
+    background: 'white',
+    padding: '2rem',
+    borderRadius: '16px',
+    textAlign: 'center',
+    maxWidth: '90%',
+    width: '400px',
+  },
+  modalTitle: {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    color: '#2d5a27',
+    marginBottom: '1rem',
+  },
+  modalImage: {
+    maxWidth: '280px',
+    width: '100%',
+    borderRadius: '8px',
+  },
+  modalDesc: {
+    color: '#888',
+    fontSize: '0.9rem',
+    margin: '1rem 0',
+  },
+  modalButtons: {
+    display: 'flex',
+    gap: '1rem',
+    justifyContent: 'center',
+    marginTop: '1rem',
+  },
 };
 
 export default QRManagement;
